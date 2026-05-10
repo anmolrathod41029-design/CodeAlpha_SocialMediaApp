@@ -790,8 +790,1089 @@ function init() {
   initSearch();
   initComposer();
 }
+  // ===== MESSAGING SYSTEM STATE =====
+let activeChatUserId = null;
+let chatMessages = [
+  { fromId: 1, toId: 0, text: "Hey Alex! That new design look is fire 🔥", time: "10:30 AM" },
+  { fromId: 0, toId: 1, text: "Thanks Zoe! Really appreciate it.", time: "10:32 AM" }
+];
 
-// Run the app!
+// Open the chat window for a specific user
+function openChat(userId) {
+  activeChatUserId = userId;
+  const user = USERS[userId];
+  
+  // Create or show chat UI
+  let chatContainer = document.getElementById('chat-overlay');
+  if (!chatContainer) {
+    chatContainer = document.createElement('div');
+    chatContainer.id = 'chat-overlay';
+    chatContainer.className = 'chat-window-container';
+    document.body.appendChild(chatContainer);
+  }
+  
+  chatContainer.innerHTML = `
+    <div class="chat-header">
+      <img src="${user.avatar}" class="chat-header-avatar" />
+      <div class="chat-header-info">
+        <div class="chat-header-name">${user.name}</div>
+        <div class="chat-header-status">Online</div>
+      </div>
+      <button class="chat-close" onclick="closeChat()">✕</button>
+    </div>
+    <div id="chat-messages-body" class="chat-body"></div>
+    <div class="chat-footer">
+      <input type="text" id="chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChatMessage()" />
+      <button onclick="sendChatMessage()">➤</button>
+    </div>
+  `;
+  
+  renderChatMessages();
+  chatContainer.classList.add('active');
+}
+
+function closeChat() {
+  const chatContainer = document.getElementById('chat-overlay');
+  if (chatContainer) chatContainer.classList.remove('active');
+  activeChatUserId = null;
+}
+
+function renderChatMessages() {
+  const body = document.getElementById('chat-messages-body');
+  if (!body || activeChatUserId === null) return;
+  
+  const thread = chatMessages.filter(m => 
+    (m.fromId === 0 && m.toId === activeChatUserId) || 
+    (m.fromId === activeChatUserId && m.toId === 0)
+  );
+  
+  body.innerHTML = thread.map(m => `
+    <div class="message-wrapper ${m.fromId === 0 ? 'me' : 'them'}">
+      <div class="message-bubble">${m.text}</div>
+      <div class="message-time">${m.time}</div>
+    </div>
+  `).join('');
+  
+  body.scrollTop = body.scrollHeight;
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || activeChatUserId === null) return;
+  
+  const now = new Date();
+  const timeStr = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+  
+  chatMessages.push({
+    fromId: 0,
+    toId: activeChatUserId,
+    text: text,
+    time: timeStr
+  });
+  
+  input.value = '';
+  renderChatMessages();
+  
+  // Simulate a quick reply
+  setTimeout(() => {
+    simulateReply(activeChatUserId);
+  }, 1500);
+}
+
+function simulateReply(userId) {
+  if (activeChatUserId !== userId) return;
+  
+  const responses = ["That's awesome!", "Cool story!", "Let's meet up later?", "Check this out!", "💯", "Hahaha true."];
+  const randomText = responses[Math.floor(Math.random() * responses.length)];
+  
+  chatMessages.push({
+    fromId: userId,
+    toId: 0,
+    text: randomText,
+    time: "Just now"
+  });
+  
+  renderChatMessages();
+  toast('💬', `New message from ${USERS[userId].name}`);
+}
+
+// Update the Profile Modal to include a "Message" button
+function updateProfileModalButtons(userId) {
+  const mfb = document.getElementById('modal-follow-btn');
+  const existingMsgBtn = document.getElementById('modal-msg-btn');
+  if (existingMsgBtn) existingMsgBtn.remove();
+  
+  if (!USERS[userId].isMe) {
+    const msgBtn = document.createElement('button');
+    msgBtn.id = 'modal-msg-btn';
+    msgBtn.className = 'modal-follow-btn secondary';
+    msgBtn.style.marginTop = "8px";
+    msgBtn.textContent = 'Message';
+    msgBtn.onclick = () => { closeProfile(); openChat(userId); };
+    mfb.parentNode.appendChild(msgBtn);
+  }
+  }
+  /* ===== CHAT WINDOW UI ===== */
+.chat-window-container {
+  position: fixed; bottom: 80px; right: 24px; width: 320px; height: 420px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; box-shadow: var(--shadow); display: none;
+  flex-direction: column; z-index: 1000; animation: toastIn 0.3s ease;
+}
+.chat-window-container.active { display: flex; }
+.chat-header {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; background: var(--surface2);
+}
+.chat-header-avatar { width: 32px; height: 32px; border-radius: 50%; }
+.chat-header-name { font-size: 0.85rem; font-weight: 700; }
+.chat-header-status { font-size: 0.65rem; color: var(--accent3); }
+.chat-close { margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; }
+
+.chat-body { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.message-wrapper { display: flex; flex-direction: column; max-width: 80%; }
+.message-wrapper.me { align-self: flex-end; align-items: flex-end; }
+.message-wrapper.them { align-self: flex-start; align-items: flex-start; }
+.message-bubble {
+  padding: 8px 12px; border-radius: 14px; font-size: 0.85rem; line-height: 1.4;
+}
+.me .message-bubble { background: var(--accent); color: white; border-bottom-right-radius: 2px; }
+.them .message-bubble { background: var(--surface2); color: var(--text); border-bottom-left-radius: 2px; }
+.message-time { font-size: 0.6rem; color: var(--muted); margin-top: 4px; }
+
+.chat-footer { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--border); }
+.chat-footer input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  padding: 8px 12px; border-radius: 99px; color: var(--text); font-size: 0.85rem; outline: none;
+}
+.chat-footer button {
+  background: var(--grad); border: none; color: white; width: 32px; height: 32px;
+  border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* Secondary Button for Profile */
+.modal-follow-btn.secondary {
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border); margin-top: 8px;
+}
+
+/* Responsive fix for chat on mobile */
+@media (max-width: 480px) {
+  .chat-window-container { width: calc(100% - 32px); right: 16px; bottom: 90px; }
+    }
+  /* ===== NOTIFICATION CENTER ===== */
+#notif-dropdown {
+  position: absolute; top: calc(var(--navbar-h) - 10px); right: 80px;
+  width: 320px; max-height: 400px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); display: none; flex-direction: column;
+  z-index: 1000; overflow: hidden; animation: toastIn 0.2s ease;
+}
+#notif-dropdown.open { display: flex; }
+.notif-header { padding: 14px; font-weight: 700; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+.notif-list { overflow-y: auto; flex: 1; }
+.notif-item {
+  display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background 0.2s;
+}
+.notif-item:hover { background: var(--surface2); }
+.notif-item.unread { border-left: 3px solid var(--accent); background: rgba(124,109,250,0.05); }
+.notif-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+.notif-content { flex: 1; font-size: 0.8rem; line-height: 1.4; }
+.notif-time { font-size: 0.7rem; color: var(--muted); margin-top: 4px; }
+
+/* ===== MEDIA LIGHTBOX ===== */
+#lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+  z-index: 2000; display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(10px); cursor: zoom-out;
+}
+#lightbox.open { display: flex; }
+#lightbox-img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+.lightbox-close { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: white; cursor: pointer; }
+  // ===== NOTIFICATION DATA & LOGIC =====
+let notifications = [
+  { id: 1, userId: 1, type: 'like', text: 'liked your post', time: '2m ago', unread: true },
+  { id: 2, userId: 2, type: 'follow', text: 'started following you', time: '1h ago', unread: true },
+  { id: 3, userId: 3, type: 'comment', text: 'commented: "This is amazing!"', time: '3h ago', unread: false }
+];
+
+function toggleNotifs() {
+  const dropdown = document.getElementById('notif-dropdown');
+  if (!dropdown) {
+    createNotifUI();
+    return toggleNotifs();
+  }
+  dropdown.classList.toggle('open');
+  if (dropdown.classList.contains('open')) {
+    markNotifsRead();
+  }
+}
+
+function createNotifUI() {
+  const navActions = document.querySelector('.nav-actions');
+  const div = document.createElement('div');
+  div.id = 'notif-dropdown';
+  document.body.appendChild(div); // Attach to body for better positioning
+  renderNotifs();
+}
+
+function renderNotifs() {
+  const dropdown = document.getElementById('notif-dropdown');
+  if (!dropdown) return;
+  
+  dropdown.innerHTML = `
+    <div class="notif-header">Notifications <span onclick="clearNotifs()" style="font-size:0.7rem; color:var(--accent); cursor:pointer;">Clear All</span></div>
+    <div class="notif-list">
+      ${notifications.map(n => `
+        <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="toast('🔔', 'Opening activity...')">
+          <img src="${USERS[n.userId].avatar}" class="notif-avatar">
+          <div class="notif-content">
+            <b>${USERS[n.userId].name}</b> ${n.text}
+            <div class="notif-time">${n.time}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function markNotifsRead() {
+  notifications.forEach(n => n.unread = false);
+  document.getElementById('notif-count').style.display = 'none';
+  renderNotifs();
+}
+
+function clearNotifs() {
+  notifications = [];
+  renderNotifs();
+  toast('🧹', 'Notifications cleared');
+}
+
+// ===== LIGHTBOX LOGIC =====
+function initLightbox() {
+  if (document.getElementById('lightbox')) return;
+  const lb = document.createElement('div');
+  lb.id = 'lightbox';
+  lb.onclick = () => lb.classList.remove('open');
+  lb.innerHTML = `<span class="lightbox-close">×</span><img id="lightbox-img" src="">`;
+  document.body.appendChild(lb);
+}
+
+function openLightbox(src) {
+  const lb = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  lb.classList.add('open');
+}
+
+// UPDATE: Modify the createPostEl image part to call openLightbox(this.src)
+// instead of window.open(this.src) in your earlier code chunk.
+
+initLightbox();
+  /* ===== PROFILE EDITING MODAL ===== */
+#edit-profile-modal {
+  position: fixed; inset: 0; z-index: 1100;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+  display: none; align-items: center; justify-content: center;
+}
+#edit-profile-modal.open { display: flex; }
+.edit-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; width: 400px; padding: 24px; box-shadow: var(--shadow);
+}
+.edit-header { font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; }
+.edit-field { margin-bottom: 16px; }
+.edit-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; display: block; }
+.edit-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  padding: 10px 14px; border-radius: 12px; color: var(--text); outline: none;
+}
+.edit-avatar-preview { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--accent); }
+
+/* ===== FILTER TABS ===== */
+.feed-filter {
+  display: flex; gap: 12px; margin-bottom: 20px; padding: 0 4px;
+}
+.filter-tab {
+  font-size: 0.85rem; font-weight: 600; color: var(--muted);
+  cursor: pointer; padding: 6px 12px; border-radius: 99px;
+  transition: all 0.2s; border: 1px solid transparent;
+}
+.filter-tab.active {
+  background: var(--surface2); color: var(--accent); border-color: var(--border);
+    }
+
+// ===== PROFILE EDITING LOGIC =====
+function openEditProfile() {
+  const user = USERS[0];
+  const modal = document.getElementById('edit-profile-modal');
+  if (!modal) {
+    createEditProfileUI();
+    return openEditProfile();
+  }
+  document.getElementById('edit-name').value = user.name;
+  document.getElementById('edit-bio').value = user.bio;
+  document.getElementById('edit-avatar-url').value = user.avatar;
+  modal.classList.add('open');
+}
+
+function createEditProfileUI() {
+  const div = document.createElement('div');
+  div.id = 'edit-profile-modal';
+  div.innerHTML = `
+    <div class="edit-card">
+      <div class="edit-header">Edit Profile <span onclick="closeEditProfile()" style="cursor:pointer;">✕</span></div>
+      <div class="edit-field">
+        <label class="edit-label">Name</label>
+        <input type="text" id="edit-name" class="edit-input">
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Bio</label>
+        <textarea id="edit-bio" class="edit-input" rows="3"></textarea>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label">Avatar URL</label>
+        <input type="text" id="edit-avatar-url" class="edit-input">
+      </div>
+      <button class="post-btn" style="width:100%" onclick="saveProfileChanges()">Save Changes</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+}
+
+function closeEditProfile() {
+  document.getElementById('edit-profile-modal').classList.remove('open');
+}
+
+function saveProfileChanges() {
+  const user = USERS[0];
+  user.name = document.getElementById('edit-name').value;
+  user.bio = document.getElementById('edit-bio').value;
+  user.avatar = document.getElementById('edit-avatar-url').value;
+  
+  // Update UI globally
+  setAvatars();
+  renderPosts();
+  closeEditProfile();
+  closeProfile();
+  toast('👤', 'Profile updated successfully');
+}
+
+// ===== FEED FILTERING LOGIC =====
+let currentFilter = 'latest';
+
+function renderFilterTabs() {
+  const feed = document.getElementById('feed');
+  const existing = document.querySelector('.feed-filter');
+  if (existing) return;
+
+  const tabs = document.createElement('div');
+  tabs.className = 'feed-filter';
+  tabs.innerHTML = `
+    <div class="filter-tab active" id="filter-latest" onclick="setFilter('latest')">Latest</div>
+    <div class="filter-tab" id="filter-popular" onclick="setFilter('popular')">Popular</div>
+  `;
+  // Insert after the stories row
+  const stories = document.getElementById('stories-row');
+  stories.parentNode.insertBefore(tabs, stories.nextSibling);
+}
+
+function setFilter(type) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`filter-${type}`).classList.add('active');
+  
+  if (type === 'popular') {
+    POSTS.sort((a, b) => b.likes - a.likes);
+  } else {
+    // Basic sort by ID for 'latest'
+    POSTS.sort((a, b) => b.id - a.id);
+  }
+  renderPosts();
+  toast('📊', `Showing ${type} posts first`);
+}
+
+// Ensure filters are rendered on startup
+// Add renderFilterTabs(); to your init() function
+  /* ===== ACTION MENUS & MODALS ===== */
+.post-menu {
+  position: absolute; right: 20px; top: 60px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: var(--shadow);
+  display: none; flex-direction: column; z-index: 100; overflow: hidden;
+}
+.post-menu.open { display: flex; }
+.menu-item {
+  padding: 10px 16px; font-size: 0.85rem; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+}
+.menu-item:hover { background: var(--surface2); }
+.menu-item.danger { color: #fa6d6d; }
+
+/* ===== SHARE MODAL ===== */
+#share-modal {
+  position: fixed; inset: 0; z-index: 1200;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+  display: none; align-items: center; justify-content: center;
+}
+#share-modal.open { display: flex; }
+.share-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; width: 350px; padding: 24px; text-align: center;
+}
+.share-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0;
+}
+.share-option {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  cursor: pointer; font-size: 0.75rem; color: var(--muted);
+}
+.share-icon-circle {
+  width: 45px; height: 45px; border-radius: 50%; background: var(--surface2);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+  // ===== POST MANAGEMENT LOGIC =====
+
+function showPostMenu(postId) {
+  const post = POSTS.find(p => p.id === postId);
+  const existingMenu = document.getElementById(`menu-${postId}`);
+  
+  if (existingMenu) {
+    existingMenu.classList.toggle('open');
+    return;
+  }
+
+  const menu = document.createElement('div');
+  menu.id = `menu-${postId}`;
+  menu.className = 'post-menu';
+  
+  const isOwner = post.userId === 0;
+
+  menu.innerHTML = `
+    ${isOwner ? `<div class="menu-item" onclick="deletePost(${postId})">🗑️ Delete Post</div>` : ''}
+    <div class="menu-item" onclick="toast('📌', 'Post pinned to profile')">📌 Pin Post</div>
+    <div class="menu-item danger" onclick="reportPost(${postId})">⚠️ Report Post</div>
+  `;
+
+  document.getElementById(`post-${postId}`).appendChild(menu);
+  menu.classList.add('open');
+  
+  // Close menu when clicking outside
+  setTimeout(() => {
+    window.onclick = (e) => {
+      if (!e.target.closest('.post-menu') && !e.target.closest('.post-more')) {
+        menu.classList.remove('open');
+      }
+    };
+  }, 10);
+}
+
+function deletePost(postId) {
+  if (!confirm("Are you sure you want to delete this post?")) return;
+  POSTS = POSTS.filter(p => p.id !== postId);
+  renderPosts();
+  toast('🗑️', 'Post deleted');
+}
+
+function reportPost(postId) {
+  const reason = prompt("Why are you reporting this post? (Spam, Harassment, Inappropriate)");
+  if (reason) {
+    toast('🛡️', 'Thank you. Our team will review this post.');
+  }
+}
+
+// ===== SHARE LOGIC =====
+function sharePost(postId) {
+  const modal = document.getElementById('share-modal');
+  if (!modal) {
+    createShareUI();
+    return sharePost(postId);
+  }
+  modal.classList.add('open');
+}
+
+function createShareUI() {
+  const div = document.createElement('div');
+  div.id = 'share-modal';
+  div.innerHTML = `
+    <div class="share-card">
+      <div class="edit-header">Share Post <span onclick="document.getElementById('share-modal').classList.remove('open')" style="cursor:pointer;">✕</span></div>
+      <div class="share-grid">
+        <div class="share-option" onclick="copyLink()">
+          <div class="share-icon-circle">🔗</div><span>Copy Link</span>
+        </div>
+        <div class="share-option" onclick="toast('🐦', 'Opening X/Twitter...')">
+          <div class="share-icon-circle">🐦</div><span>X / Twitter</span>
+        </div>
+        <div class="share-option" onclick="toast('📸', 'Opening Instagram...')">
+          <div class="share-icon-circle">📸</div><span>Stories</span>
+        </div>
+      </div>
+      <input type="text" readonly value="https://vibe.social/p/101" class="edit-input" id="share-url">
+    </div>
+  `;
+  document.body.appendChild(div);
+}
+
+function copyLink() {
+  const input = document.getElementById('share-url');
+  input.select();
+  document.execCommand('copy');
+  toast('✅', 'Link copied to clipboard!');
+}
+  /* ===== SAFETY & SETTINGS UI ===== */
+.settings-section {
+  margin-top: 24px; padding: 16px; background: var(--surface2);
+  border-radius: 16px; border: 1px solid var(--border);
+}
+.settings-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; }
+.settings-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.settings-item:last-child { border-bottom: none; }
+.settings-label { font-size: 0.85rem; }
+.settings-desc { font-size: 0.75rem; color: var(--muted); }
+
+/* Blocked List UI */
+#blocked-list-modal {
+  position: fixed; inset: 0; z-index: 1300;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+  display: none; align-items: center; justify-content: center;
+}
+#blocked-list-modal.open { display: flex; }
+
+/* Verification Badge Animation */
+@keyframes verifyPop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.verified-anim { animation: verifyPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  // ===== SAFETY & ACCOUNT LOGIC =====
+
+let blockedUserIds = [];
+
+function blockUser(userId) {
+  if (userId === 0) return toast('⚠️', "You can't block yourself!");
+  if (!confirm(`Are you sure you want to block ${USERS[userId].name}?`)) return;
+
+  blockedUserIds.push(userId);
+  // Remove their posts from view immediately
+  POSTS = POSTS.filter(p => p.userId !== userId);
+  renderPosts();
+  closeProfile();
+  toast('🚫', `${USERS[userId].name} has been blocked.`);
+}
+
+function showBlockedList() {
+  const modal = document.getElementById('blocked-list-modal');
+  if (!modal) {
+    const div = document.createElement('div');
+    div.id = 'blocked-list-modal';
+    document.body.appendChild(div);
+  }
+  
+  const listHTML = blockedUserIds.length > 0 
+    ? blockedUserIds.map(id => `
+        <div class="settings-item">
+          <div>${USERS[id].name}</div>
+          <button class="follow-btn" onclick="unblockUser(${id})">Unblock</button>
+        </div>`).join('')
+    : '<div style="text-align:center; padding:20px; color:var(--muted);">No blocked users</div>';
+
+  document.getElementById('blocked-list-modal').innerHTML = `
+    <div class="edit-card">
+      <div class="edit-header">Blocked Users <span onclick="document.getElementById('blocked-list-modal').classList.remove('open')" style="cursor:pointer;">✕</span></div>
+      ${listHTML}
+    </div>
+  `;
+  document.getElementById('blocked-list-modal').classList.add('open');
+}
+
+function unblockUser(userId) {
+  blockedUserIds = blockedUserIds.filter(id => id !== userId);
+  showBlockedList();
+  toast('🔓', 'User unblocked');
+}
+
+// ===== VERIFICATION REQUEST =====
+function requestVerification() {
+  if (USERS[0].verified) return toast('✅', 'You are already verified!');
+  
+  const handle = prompt("Confirm your handle to request verification:", USERS[0].handle);
+  if (handle === USERS[0].handle) {
+    toast('⏳', 'Request sent! Our team will review your profile.');
+    // Simulation: Grant verification after 5 seconds
+    setTimeout(() => {
+      USERS[0].verified = true;
+      setAvatars();
+      renderPosts();
+      toast('🌟', 'Congratulations! You are now verified.', 'success');
+    }, 5000);
+  }
+}
+
+// ===== DATA EXPORT (JSON DOWNLOAD) =====
+function exportUserData() {
+  toast('⚙️', 'Preparing your data archive...');
+  
+  const userData = {
+    profile: USERS[0],
+    myPosts: POSTS.filter(p => p.userId === 0),
+    settings: { theme: document.documentElement.getAttribute('data-theme'), blocked: blockedUserIds }
+  };
+
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(userData, null, 2));
+  const downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href", dataStr);
+  downloadAnchorNode.setAttribute("download", "vibe_social_data.json");
+  document.body.appendChild(downloadAnchorNode);
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+  
+  toast('📂', 'Data export complete!');
+}
+
+// Update the Profile Modal to include "Block" in the dropdown/options
+// (You can add this to your showPostMenu logic or as a button in openProfile)
+  /* ===== THEME ENGINE UI ===== */
+.color-picker-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 10px;
+}
+.color-swatch {
+  width: 100%; aspect-ratio: 1; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: transform 0.2s;
+}
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.active { border-color: white; transform: scale(1.1); }
+
+/* ===== SCHEDULING UI ===== */
+#schedule-modal {
+  position: fixed; inset: 0; z-index: 1400;
+  background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+  display: none; align-items: center; justify-content: center;
+}
+#schedule-modal.open { display: flex; }
+.schedule-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 24px; width: 320px; padding: 24px;
+}
+.time-input {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  padding: 12px; border-radius: 12px; color: var(--text); margin: 15px 0;
+}
+
+// ===== THEME CUSTOMIZATION LOGIC =====
+const ACCENT_COLORS = [
+  '#7c6dfa', '#fa6d9a', '#6dfac8', '#f7b731', '#eb3b5a', 
+  '#3867d6', '#8854d0', '#20bf6b', '#f7d794', '#596275'
+];
+
+function showThemePicker() {
+  const modal = document.createElement('div');
+  modal.id = 'theme-picker-modal';
+  modal.className = 'profile-modal open'; // Reuse profile modal styles
+  modal.style.zIndex = "1500";
+  
+  const swatches = ACCENT_COLORS.map(color => `
+    <div class="color-swatch" 
+         style="background: ${color}" 
+         onclick="setAccentColor('${color}')"></div>
+  `).join('');
+
+  modal.innerHTML = `
+    <div class="edit-card">
+      <div class="edit-header">Custom Theme <span onclick="this.closest('.profile-modal').remove()" style="cursor:pointer;">✕</span></div>
+      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:15px;">Pick your custom accent color:</p>
+      <div class="color-picker-grid">${swatches}</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function setAccentColor(color) {
+  document.documentElement.style.setProperty('--accent', color);
+  localStorage.setItem('vibe_accent', color); // Save preference
+  toast('🎨', 'Theme color updated!');
+}
+
+// ===== POST SCHEDULING LOGIC =====
+let scheduledPosts = [];
+
+function openScheduler() {
+  const modal = document.getElementById('schedule-modal');
+  if (!modal) {
+    const div = document.createElement('div');
+    div.id = 'schedule-modal';
+    document.body.appendChild(div);
+  }
+  
+  document.getElementById('schedule-modal').innerHTML = `
+    <div class="schedule-card">
+      <div class="edit-header">Schedule Post <span onclick="document.getElementById('schedule-modal').classList.remove('open')" style="cursor:pointer;">✕</span></div>
+      <p style="font-size:0.75rem; color:var(--muted);">When should this post go live?</p>
+      <input type="datetime-local" id="schedule-time" class="time-input">
+      <button class="post-btn" style="width:100%" onclick="confirmSchedule()">Confirm Schedule</button>
+    </div>
+  `;
+  document.getElementById('schedule-modal').classList.add('open');
+}
+
+function confirmSchedule() {
+  const time = document.getElementById('schedule-time').value;
+  const text = document.getElementById('compose-text').value.trim();
+  
+  if (!time || !text) return toast('⚠️', 'Please provide text and time');
+
+  scheduledPosts.push({ text, time: new Date(time), id: Date.now() });
+  
+  document.getElementById('compose-text').value = '';
+  document.getElementById('schedule-modal').classList.remove('open');
+  toast('⏰', `Post scheduled for ${new Date(time).toLocaleString()}`);
+  
+  // Simulation: Checker loop
+  checkScheduledPosts();
+}
+
+function checkScheduledPosts() {
+  setInterval(() => {
+    const now = new Date();
+    scheduledPosts.forEach((post, index) => {
+      if (now >= post.time) {
+        publishScheduledPost(post.text);
+        scheduledPosts.splice(index, 1);
+      }
+    });
+  }, 10000); // Check every 10 seconds
+}
+
+function publishScheduledPost(text) {
+  const newPost = {
+    id: nextPostId++, userId: 0, text: text, image: null,
+    likes: 0, liked: false, comments: [], time: 'Just now (Scheduled)'
+  };
+  POSTS.unshift(newPost);
+  renderPosts();
+  toast('🔔', 'Your scheduled post is now live!');
+}
+  /* ===== POLLS UI ===== */
+.poll-container {
+  margin-top: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.poll-option-btn {
+  width: 100%; padding: 10px 14px; border-radius: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 0.85rem; text-align: left;
+  cursor: pointer; position: relative; overflow: hidden; transition: all 0.2s;
+}
+.poll-option-btn:hover { border-color: var(--accent); }
+.poll-bar {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: var(--accent); opacity: 0.15; transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.poll-percent { float: right; font-weight: 700; color: var(--accent); }
+
+/* ===== CHAT STATUS UI ===== */
+.typing-indicator {
+  font-size: 0.7rem; color: var(--muted); font-style: italic;
+  margin-bottom: 8px; display: none;
+}
+.typing-indicator.active { display: block; }
+.read-receipt {
+  font-size: 0.6rem; color: var(--accent3); align-self: flex-end; margin-top: -8px;
+    }
+
+// ===== POLL SYSTEM LOGIC =====
+let pollVotes = {}; // Format: { postId: { optionIndex: count } }
+
+function createPollPost() {
+  const text = document.getElementById('compose-text').value.trim();
+  const optionsInput = prompt("Enter poll options separated by commas (e.g. Yes, No, Maybe):");
+  
+  if (!text || !optionsInput) return toast('⚠️', 'Poll needs text and options');
+
+  const options = optionsInput.split(',').map(opt => opt.trim()).filter(opt => opt !== "");
+  
+  const newPost = {
+    id: nextPostId++, userId: 0, text: text,
+    poll: { options: options, totalVotes: 0 },
+    likes: 0, comments: [], time: 'Just now'
+  };
+
+  pollVotes[newPost.id] = options.map(() => 0);
+  POSTS.unshift(newPost);
+  renderPosts();
+  document.getElementById('compose-text').value = '';
+  toast('📊', 'Poll published!');
+}
+
+// Update createPostEl to include this inside the post-body check
+function getPollHTML(post) {
+  if (!post.poll) return '';
+  
+  const votes = pollVotes[post.id] || post.poll.options.map(() => 0);
+  const total = votes.reduce((a, b) => a + b, 0);
+
+  return `
+    <div class="poll-container">
+      ${post.poll.options.map((opt, i) => {
+        const pct = total === 0 ? 0 : Math.round((votes[i] / total) * 100);
+        return `
+          <button class="poll-option-btn" onclick="voteInPoll(${post.id}, ${i})">
+            <div class="poll-bar" style="width: ${pct}%"></div>
+            <span class="poll-percent">${pct}%</span>
+            ${opt}
+          </button>
+        `;
+      }).join('')}
+      <div style="font-size: 0.7rem; color: var(--muted); margin-top: 4px;">${total} votes</div>
+    </div>
+  `;
+}
+
+function voteInPoll(postId, optionIndex) {
+  if (!pollVotes[postId]) return;
+  pollVotes[postId][optionIndex]++;
+  renderPosts();
+  toast('🗳️', 'Vote counted!');
+}
+
+// ===== CHAT ENHANCEMENTS =====
+function showTypingIndicator() {
+  const indicator = document.getElementById('typing-indicator');
+  if (!indicator) {
+    const body = document.getElementById('chat-messages-body');
+    const div = document.createElement('div');
+    div.id = 'typing-indicator';
+    div.className = 'typing-indicator';
+    div.textContent = `${USERS[activeChatUserId].name} is typing...`;
+    body.appendChild(div);
+  }
+  document.getElementById('typing-indicator').classList.add('active');
+  document.getElementById('chat-messages-body').scrollTop = document.getElementById('chat-messages-body').scrollHeight;
+}
+
+function hideTypingIndicator() {
+  const indicator = document.getElementById('typing-indicator');
+  if (indicator) indicator.classList.remove('active');
+}
+
+// Wrap your simulateReply function logic
+function simulateReplyEnhanced(userId) {
+  if (activeChatUserId !== userId) return;
+  
+  // Show typing for 2 seconds before replying
+  setTimeout(() => showTypingIndicator(), 500);
+  
+  setTimeout(() => {
+    hideTypingIndicator();
+    const responses = ["That's interesting!", "I'll think about it.", "Check your notifications!", "Talk soon!"];
+    const randomText = responses[Math.floor(Math.random() * responses.length)];
+    
+    chatMessages.push({ fromId: userId, toId: 0, text: randomText, time: "Just now" });
+    renderChatMessages();
+    
+    // Add a read receipt to the previous message
+    const body = document.getElementById('chat-messages-body');
+    const receipt = document.createElement('div');
+    receipt.className = 'read-receipt';
+    receipt.textContent = '✓ Read';
+    body.appendChild(receipt);
+    
+  }, 2500);
+}
+  /* ===== VOICE MESSAGE UI ===== */
+.voice-msg-container {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface2); padding: 8px 12px;
+  border-radius: 99px; margin-top: 8px; width: fit-content;
+}
+.voice-play-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); border: none; color: white;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.voice-waveform {
+  display: flex; gap: 2px; align-items: center; height: 15px;
+}
+.waveform-bar {
+  width: 2px; background: var(--muted); border-radius: 1px;
+}
+.waveform-bar.active { background: var(--accent); }
+
+/* ===== GROUP CHAT UI ===== */
+.group-avatar-stack {
+  display: flex; position: relative; height: 32px; width: 50px;
+}
+.stack-img {
+  width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--surface);
+  position: absolute;
+}
+.stack-img:nth-child(2) { left: 12px; }
+.stack-img:nth-child(3) { left: 24px; }
+
+  // ===== VOICE MESSAGE LOGIC =====
+function getVoiceMsgHTML(duration) {
+  const bars = Array.from({length: 15}, () => Math.floor(Math.random() * 10) + 5);
+  return `
+    <div class="voice-msg-container">
+      <button class="voice-play-btn" onclick="playVoiceSim(this)">▶</button>
+      <div class="voice-waveform">
+        ${bars.map(h => `<div class="waveform-bar" style="height:${h}px"></div>`).join('')}
+      </div>
+      <span style="font-size:0.65rem; color:var(--muted);">${duration}</span>
+    </div>
+  `;
+}
+
+function playVoiceSim(btn) {
+  const bars = btn.nextElementSibling.children;
+  btn.textContent = '⏸';
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i >= bars.length) {
+      clearInterval(interval);
+      btn.textContent = '▶';
+      Array.from(bars).forEach(b => b.classList.remove('active'));
+      return;
+    }
+    bars[i].classList.add('active');
+    i++;
+  }, 200);
+  toast('🔊', 'Playing voice message...');
+}
+
+// ===== GROUP CHAT LOGIC =====
+let groups = [
+  { id: 101, name: "Vibe Devs 💻", members: [0, 1, 3], messages: [] }
+];
+
+function openGroupChat(groupId) {
+  const group = groups.find(g => g.id === groupId);
+  activeChatUserId = null; // Close individual chat state
+  
+  const chatContainer = document.getElementById('chat-overlay') || createChatOverlay();
+  chatContainer.innerHTML = `
+    <div class="chat-header">
+      <div class="group-avatar-stack">
+        ${group.members.map(mId => `<img src="${USERS[mId].avatar}" class="stack-img">`).join('')}
+      </div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">${group.name}</div>
+        <div class="chat-header-status">${group.members.length} members</div>
+      </div>
+      <button class="chat-close" onclick="closeChat()">✕</button>
+    </div>
+    <div id="chat-messages-body" class="chat-body"></div>
+    <div class="chat-footer">
+      <input type="text" id="chat-input" placeholder="Message group..." onkeydown="if(event.key==='Enter')sendGroupMessage(${groupId})" />
+      <button onclick="sendGroupMessage(${groupId})">➤</button>
+    </div>
+  `;
+  renderGroupMessages(groupId);
+  chatContainer.classList.add('active');
+}
+
+function sendGroupMessage(groupId) {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const group = groups.find(g => g.id === groupId);
+  group.messages.push({ fromId: 0, text: text, time: "Just now" });
+  
+  input.value = '';
+  renderGroupMessages(groupId);
+  
+  // Simulation: Someone else replies
+  setTimeout(() => {
+    const randomMember = group.members.find(m => m !== 0);
+    group.messages.push({ fromId: randomMember, text: "Totally agree!", time: "Just now" });
+    renderGroupMessages(groupId);
+  }, 2000);
+}
+
+function renderGroupMessages(groupId) {
+  const body = document.getElementById('chat-messages-body');
+  const group = groups.find(g => g.id === groupId);
+  
+  body.innerHTML = group.messages.map(m => `
+    <div class="message-wrapper ${m.fromId === 0 ? 'me' : 'them'}">
+      ${m.fromId !== 0 ? `<span style="font-size:0.6rem; color:var(--accent); font-weight:700;">${USERS[m.fromId].name}</span>` : ''}
+      <div class="message-bubble">${m.text}</div>
+      <div class="message-time">${m.time}</div>
+    </div>
+  `).join('');
+  body.scrollTop = body.scrollHeight;
+}
+  /* ===== ANALYTICS DASHBOARD ===== */
+#analytics-modal {
+  position: fixed; inset: 0; z-index: 1500;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+  display: none; align-items: center; justify-content: center;
+}
+#analytics-modal.open { display: flex; }
+.analytics-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 28px; width: 450px; padding: 24px; box-shadow: var(--shadow);
+}
+.stat-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0;
+}
+.stat-box {
+  background: var(--surface2); padding: 16px; border-radius: 16px;
+  border: 1px solid var(--border); text-align: center;
+}
+.stat-val { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+.stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+.growth-up { color: var(--accent3); font-size: 0.7rem; font-weight: 700; }
+  // ===== ANALYTICS LOGIC =====
+function openAnalytics() {
+  const modal = document.getElementById('analytics-modal') || createAnalyticsUI();
+  
+  // Simulated dynamic data
+  const reach = Math.floor(Math.random() * 5000) + 1200;
+  const engagement = ((Math.random() * 5) + 2).toFixed(1);
+  
+  document.getElementById('stat-reach').textContent = reach.toLocaleString();
+  document.getElementById('stat-engage').textContent = engagement + "%";
+  
+  modal.classList.add('open');
+}
+
+function createAnalyticsUI() {
+  const div = document.createElement('div');
+  div.id = 'analytics-modal';
+  div.innerHTML = `
+    <div class="analytics-card">
+      <div class="edit-header">Profile Insights ✦ <span onclick="document.getElementById('analytics-modal').classList.remove('open')" style="cursor:pointer;">✕</span></div>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-val" id="stat-reach">0</div>
+          <div class="stat-label">Total Reach</div>
+          <div class="growth-up">↑ 12% this week</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-engage">0%</div>
+          <div class="stat-label">Engagemnt Rate</div>
+          <div class="growth-up">↑ 0.4%</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Top Content</div>
+        <div style="font-size:0.8rem; color:var(--muted);">Your post "#WebDev2026" is performing 25% better than average.</div>
+      </div>
+      <button class="post-btn" style="width:100%; margin-top:20px;" onclick="toast('📊', 'Generating full report...')">Download Full PDF</button>
+    </div>
+  `;
+  document.body.appendChild(div);
+  return div;
+}
+
+// FINAL APP WRAP-UP
+console.log("Vibe Social Engine v2.0 - All Systems Operational.");
 init();
 </script>
 </body>
