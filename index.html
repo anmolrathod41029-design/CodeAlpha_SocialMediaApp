@@ -3,190 +3,322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus - Digital Workspace</title>
+    <title>Nexus Ultra ✦ High-Fidelity Social</title>
     <style>
         :root {
-            --bg-dark: #0d0d12;
-            --sidebar-bg: #16161d;
-            --accent-purple: #8a2be2;
-            --text-main: #ffffff;
-            --text-dim: #a0a0a0;
+            --bg: #000000; --surf: #121212; --text: #ffffff; --muted: #a8a8a8;
+            --accent: #0095f6; --border: #262626; --grad: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
         }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
 
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            display: flex;
-        }
+        /* Navigation */
+        nav.sidebar { width: 250px; height: 100vh; border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; display: flex; flex-direction: column; background: var(--bg); z-index: 1000; }
+        .logo { font-size: 26px; font-weight: 800; margin-bottom: 40px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: italic; }
+        .nav-link { display: flex; align-items: center; gap: 15px; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 17px; margin-bottom: 5px; }
+        .nav-link:hover { background: rgba(255,255,255,0.05); }
+        .nav-link.active { font-weight: 700; }
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: 250px;
-            height: 100vh;
-            background: var(--sidebar-bg);
-            padding: 20px;
-            position: fixed;
-        }
+        /* Main Viewport */
+        main.main-content { margin-left: 250px; height: 100vh; overflow-y: auto; scrollbar-width: none; }
+        .container { max-width: 630px; margin: 0 auto; padding: 30px 15px; }
 
-        /* Story Container Section */
-        .main-content {
-            margin-left: 270px;
-            padding: 20px;
-            width: 100%;
-        }
+        /* Story Bar */
+        .story-bar { display: flex; gap: 18px; overflow-x: auto; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 30px; scrollbar-width: none; }
+        .story-item { min-width: 80px; text-align: center; cursor: pointer; }
+        .ring { width: 72px; height: 72px; border-radius: 50%; padding: 3px; background: var(--grad); margin: 0 auto 8px; position: relative; }
+        .ring.seen { background: #555; }
+        .ring img { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #000; object-fit: cover; }
+        
+        /* Post Styling */
+        .post { background: #000; border-bottom: 1px solid var(--border); margin-bottom: 30px; padding-bottom: 20px; }
+        .post-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+        .user-meta { display: flex; align-items: center; gap: 12px; }
+        .user-meta img { width: 38px; height: 38px; border-radius: 50%; }
+        .post-media img { width: 100%; border-radius: 4px; border: 1px solid var(--border); }
+        .post-actions { display: flex; gap: 20px; padding: 15px 0; font-size: 24px; }
+        .post-actions span { cursor: pointer; transition: 0.1s; }
+        .post-actions span:active { transform: scale(1.3); }
 
-        .story-wrapper {
-            display: flex;
-            gap: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 15px;
-            margin-bottom: 30px;
-            overflow-x: auto;
-        }
+        /* Comments */
+        .comment-area { display: none; margin-top: 10px; }
+        .comment-area.active { display: block; }
+        .comment-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); color: #fff; padding: 10px 0; outline: none; }
 
-        .story-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+        /* Cinematic Story Viewer */
+        .viewer-overlay { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; align-items: center; justify-content: center; }
+        .viewer-overlay.active { display: flex; }
+        .story-box { width: 100%; max-width: 420px; height: 92vh; position: relative; border-radius: 12px; overflow: hidden; }
+        .story-box img { width: 100%; height: 100%; object-fit: cover; }
+        .progress-cont { position: absolute; top: 15px; left: 10px; right: 10px; height: 2px; background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .progress-fill { height: 100%; background: #fff; width: 0%; }
+        .story-user-info { position: absolute; top: 30px; left: 20px; display: flex; align-items: center; gap: 10px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-        .story-item:hover {
-            transform: scale(1.05);
-        }
+        /* Explore Grid */
+        #explore-view { display: none; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; }
+        #explore-view img { width: 100%; aspect-ratio: 1; object-fit: cover; cursor: pointer; }
 
-        .ring {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            padding: 3px;
-            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+        /* Neural Chat UI */
+        #chat-view { display: none; flex-direction: column; height: 100vh; padding: 30px; background: #000; }
+        .message-bubble { background: #262626; padding: 12px 18px; border-radius: 20px; margin-bottom: 10px; max-width: 80%; align-self: flex-start; }
+        .message-bubble.me { background: var(--accent); align-self: flex-end; }
 
-        .story-item img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 2px solid var(--bg-dark);
-            object-fit: cover;
-        }
+        /* Edit Profile Modal */
+        #edit-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: none; align-items: center; justify-content: center; }
+        .edit-card { background: #121212; padding: 30px; border-radius: 20px; width: 400px; border: 1px solid var(--border); }
+        .edit-card input { width: 100%; padding: 12px; margin: 15px 0; background: #262626; border: none; border-radius: 8px; color: #fff; }
 
-        .story-item span {
-            font-size: 12px;
-            margin-top: 8px;
-            color: var(--text-dim);
-        }
+        .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 12px 24px; border-radius: 30px; font-weight: 700; display: none; z-index: 9999; }
 
-        /* Story Viewer Modal */
-        .story-viewer {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+        @media (max-width: 800px) {
+            nav.sidebar { display: none; }
+            main.main-content { margin-left: 0; padding-bottom: 70px; }
+            .mobile-nav { display: flex !important; }
         }
-
-        .story-viewer.active {
-            display: flex;
-        }
-
-        #activeStoryImg {
-            max-width: 90%;
-            max-height: 80vh;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 30px;
-            right: 30px;
-            font-size: 40px;
-            color: white;
-            cursor: pointer;
-        }
-
-        /* Feed Content Placeholder */
-        .feed-post {
-            max-width: 500px;
-            background: var(--sidebar-bg);
-            border-radius: 12px;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-        }
+        .mobile-nav { display: none; position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); justify-content: space-around; padding: 15px; z-index: 1000; }
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
-        <h2>NEXUS</h2>
-        <p style="color: var(--accent-purple);">✦ Quantum Feed</p>
-        <p>Discover</p>
-        <p>Neural Chat</p>
-    </nav>
+<nav class="sidebar">
+    <div class="logo">NEXUS ✦</div>
+    <div class="nav-link active" id="btn-home" onclick="navTo('home')">🏠 Home</div>
+    <div class="nav-link" id="btn-explore" onclick="navTo('explore')">🔍 Explore</div>
+    <div class="nav-link" id="btn-chat" onclick="navTo('chat')">💬 Neural Chat</div>
+    <div class="nav-link" id="btn-edit" onclick="openEdit()">👤 Edit Identity</div>
+    <div class="nav-link" onclick="toggleVision()" style="margin-top:auto">🌓 Switch Vision</div>
+</nav>
 
-    <div class="main-content">
-        <div class="story-wrapper">
-            <div class="story-item" onclick="openStory('anmol-full.jpg')">
-                <div class="ring"><img src="anmol-thumb.jpg" alt="Anmol"></div>
-                <span>Anmol</span>
-            </div>
-            <div class="story-item" onclick="openStory('jessica-full.jpg')">
-                <div class="ring"><img src="jessica-thumb.jpg" alt="Jessica"></div>
-                <span>Jessica</span>
-            </div>
-            <div class="story-item" onclick="openStory('swaraj-full.jpg')">
-                <div class="ring"><img src="swaraj-thumb.jpg" alt="Swaraj"></div>
-                <span>Swaraj</span>
-            </div>
-            <div class="story-item" onclick="openStory('rahul-full.jpg')">
-                <div class="ring"><img src="rahul-thumb.jpg" alt="Rahul"></div>
-                <span>Rahul</span>
+<main class="main-content">
+    <div id="home-view" class="container">
+        <div class="story-bar" id="storyRow"></div>
+
+        <div style="background: #121212; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+            <textarea id="pThought" placeholder="What's your current frequency, Anmol?" style="width:100%; background:transparent; border:none; color:white; font-size:18px; outline:none; resize:none;"></textarea>
+            <div style="display:flex; justify-content:space-between; margin-top:15px; pt:10px; border-top:1px solid #262626; padding-top:10px;">
+                <span style="cursor:pointer;" onclick="document.getElementById('hiddenFile').click()">📸 Add Photo</span>
+                <input type="file" id="hiddenFile" style="display:none" onchange="postImg(event)">
+                <button onclick="postText()" style="background:var(--accent); color:white; border:none; padding:6px 18px; border-radius:8px; font-weight:bold; cursor:pointer;">EMIT</button>
             </div>
         </div>
 
-        <div class="feed-post">
-            <div style="padding: 10px;"><strong>Swaraj</strong> <span style="font-size: 10px;">Navi Mumbai, IN</span></div>
-            <img src="post-image.jpg" style="width: 100%;" alt="Feed Post">
+        <div id="feed"></div>
+    </div>
+
+    <div id="explore-view"></div>
+
+    <div id="chat-view">
+        <h2 style="margin-bottom:20px;">Neural Transmissions</h2>
+        <div id="chat-history" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding-bottom:20px;"></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="msgInp" placeholder="Type 'Good Morning'..." style="flex:1; padding:15px; border-radius:30px; background:#262626; border:none; color:#fff;">
+            <button onclick="sendMsg()" style="background:var(--accent); border:none; padding:15px 25px; border-radius:30px; color:#white; font-weight:bold; cursor:pointer;">➔</button>
         </div>
     </div>
+</main>
 
-    <div class="story-viewer" id="storyViewer">
-        <span class="close-btn" onclick="closeStory()">&times;</span>
-        <img id="activeStoryImg" src="" alt="Full Story">
+<div class="mobile-nav">
+    <span onclick="navTo('home')">🏠</span>
+    <span onclick="navTo('explore')">🔍</span>
+    <span onclick="navTo('chat')">💬</span>
+    <span onclick="openEdit()">👤</span>
+</div>
+
+<div class="viewer-overlay" id="sViewer" onclick="closeStory()">
+    <div class="story-box" onclick="event.stopPropagation()">
+        <div class="progress-cont"><div class="progress-fill" id="pFill"></div></div>
+        <div class="story-user-info">
+            <img id="vAvatar" src="">
+            <b id="vName"></b>
+        </div>
+        <img id="vImg" src="">
     </div>
+</div>
 
-    <script>
-        const viewer = document.getElementById('storyViewer');
-        const activeImg = document.getElementById('activeStoryImg');
+<div id="edit-modal">
+    <div class="edit-card">
+        <h3>Edit Workspace</h3>
+        <input type="text" id="newName" placeholder="Enter New Name">
+        <button onclick="saveName()" style="width:100%; padding:12px; background:var(--accent); border:none; color:white; font-weight:bold; border-radius:8px; cursor:pointer;">Sync Identity</button>
+        <p onclick="closeEdit()" style="text-align:center; margin-top:15px; color:var(--muted); cursor:pointer;">Cancel</p>
+    </div>
+</div>
 
-        function openStory(imageSrc) {
-            // In a real app, imageSrc would be the path to your high-res upload
-            activeImg.src = imageSrc;
-            viewer.classList.add('active');
+<div class="toast" id="toast"></div>
+
+<script>
+    const USERS = [
+        { id: 0, name: "Anmol", avatar: "https://i.pravatar.cc/150?u=me", story: "https://picsum.photos/seed/s1/500/900", city: "Navi Mumbai" },
+        { id: 1, name: "Jessica", avatar: "https://i.pravatar.cc/150?u=1", story: "https://picsum.photos/seed/s2/500/900", city: "New York" },
+        { id: 2, name: "Swaraj", avatar: "https://i.pravatar.cc/150?u=2", story: "https://picsum.photos/seed/s3/500/900", city: "Mumbai" },
+        { id: 3, name: "Rahul", avatar: "https://i.pravatar.cc/150?u=3", story: "https://picsum.photos/seed/s4/500/900", city: "Delhi" },
+        { id: 4, name: "Elena", avatar: "https://i.pravatar.cc/150?u=4", story: "https://picsum.photos/seed/s5/500/900", city: "Paris" },
+        { id: 5, name: "Marcus", avatar: "https://i.pravatar.cc/150?u=5", story: "https://picsum.photos/seed/s6/500/900", city: "Berlin" },
+        { id: 6, name: "Arya", avatar: "https://i.pravatar.cc/150?u=6", story: "https://picsum.photos/seed/s7/500/900", city: "Winterfell" },
+        { id: 7, name: "Ashish", avatar: "https://i.pravatar.cc/150?u=7", story: "https://picsum.photos/seed/s8/500/900", city: "Pune" },
+        { id: 8, name: "Sumit", avatar: "https://i.pravatar.cc/150?u=8", story: "https://picsum.photos/seed/s9/500/900", city: "Bangalore" },
+        { id: 9, name: "Yash", avatar: "https://i.pravatar.cc/150?u=9", story: "https://picsum.photos/seed/s10/500/900", city: "Mumbai" }
+    ];
+
+    let POSTS = [
+        { id: 101, uId: 2, img: "https://picsum.photos/seed/p1/600/600", text: "Neural Networks are the future. 🧠", liked: false, comments: [] },
+        { id: 102, uId: 5, img: "https://picsum.photos/seed/p2/600/600", text: "Architecture vibes today. 🏛️", liked: false, comments: [] },
+        { id: 103, uId: 0, img: "https://picsum.photos/seed/p3/600/600", text: "Designing Nexus Ultra! ⚡", liked: false, comments: [] }
+    ];
+
+    let storyTick;
+
+    function render() {
+        // Story Rendering
+        const sBar = document.getElementById('storyRow');
+        sBar.innerHTML = USERS.map(u => `
+            <div class="story-item" onclick="viewStory(${u.id})">
+                <div class="ring" id="ring-${u.id}"><img src="${u.avatar}"></div>
+                <small>${u.name}</small>
+            </div>
+        `).join('');
+
+        // Feed Rendering
+        const feed = document.getElementById('feed');
+        feed.innerHTML = POSTS.map(p => {
+            const u = USERS.find(x => x.id === p.uId);
+            return `
+                <div class="post">
+                    <div class="post-header">
+                        <div class="user-meta">
+                            <img src="${u.avatar}">
+                            <div><b>${u.name}</b><br><small style="color:var(--muted)">${u.city}</small></div>
+                        </div>
+                        <span>•••</span>
+                    </div>
+                    <div class="post-media" ondblclick="likePost(${p.id})"><img src="${p.img}"></div>
+                    <div class="post-actions">
+                        <span onclick="likePost(${p.id})">${p.liked?'❤️':'🤍'}</span>
+                        <span onclick="toggleC(${p.id})">💬</span>
+                        <span onclick="nativeShare('${p.text}')">✈️</span>
+                        <span style="margin-left:auto" onclick="toast('Saved to Workspace')">📑</span>
+                    </div>
+                    <div><b>${u.name}</b> ${p.text}</div>
+                    <div class="comment-area" id="carea-${p.id}">
+                        <div id="clist-${p.id}" style="font-size:13px; margin-bottom:10px;">${p.comments.map(c => `<div><b>You:</b> ${c}</div>`).join('')}</div>
+                        <input type="text" class="comment-input" placeholder="Add a comment..." onkeydown="addC(event, ${p.id})">
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function viewStory(id) {
+        const u = USERS[id];
+        const overlay = document.getElementById('sViewer');
+        const fill = document.getElementById('pFill');
+        document.getElementById('vImg').src = u.story;
+        document.getElementById('vAvatar').src = u.avatar;
+        document.getElementById('vName').innerText = u.name;
+        document.getElementById(`ring-${id}`).classList.add('seen');
+        overlay.classList.add('active');
+
+        let w = 0;
+        clearInterval(storyTick);
+        storyTick = setInterval(() => {
+            w++;
+            fill.style.width = w + '%';
+            if(w >= 100) closeStory();
+        }, 40);
+    }
+
+    function closeStory() {
+        document.getElementById('sViewer').classList.remove('active');
+        clearInterval(storyTick);
+    }
+
+    function navTo(target) {
+        const views = ['home-view', 'explore-view', 'chat-view'];
+        views.forEach(v => document.getElementById(v).style.display = 'none');
+        document.getElementById(target + '-view').style.display = target === 'explore' ? 'grid' : 'flex';
+        
+        if(target === 'explore') {
+            document.getElementById('explore-view').innerHTML = Array.from({length:21}).map((_, i) => 
+                `<img src="https://picsum.photos/seed/ex${i}/400/400" onclick="toast('Discovery Post #${i+1}')">`
+            ).join('');
         }
+        if(target === 'chat') renderChat();
+    }
 
-        function closeStory() {
-            viewer.classList.remove('active');
-            activeImg.src = '';
+    // Chat Logic
+    let messages = [
+        { name: "Jessica", msg: "Anmol! How are you?" },
+        { name: "Swaraj", msg: "Good Morning bro! Did you check the new Nexus code?" }
+    ];
+
+    function renderChat() {
+        const hist = document.getElementById('chat-history');
+        hist.innerHTML = messages.map(m => `
+            <div class="message-bubble ${m.name === 'You' ? 'me' : ''}">
+                <b>${m.name}</b><br>${m.msg}
+            </div>
+        `).join('');
+        hist.scrollTop = hist.scrollHeight;
+    }
+
+    function sendMsg() {
+        const inp = document.getElementById('msgInp');
+        if(!inp.value) return;
+        messages.push({ name: "You", msg: inp.value });
+        const val = inp.value;
+        inp.value = '';
+        renderChat();
+        
+        if(val.toLowerCase().includes("morning")) {
+            setTimeout(() => {
+                messages.push({ name: "Jessica", msg: "Good Morning! Wishing you a productive day ahead! 🚀" });
+                renderChat();
+            }, 1000);
         }
+    }
 
-        // Close on clicking outside the image
-        viewer.addEventListener('click', (e) => {
-            if (e.target === viewer) closeStory();
-        });
-    </script>
+    function likePost(id) {
+        const p = POSTS.find(x => x.id === id);
+        p.liked = !p.liked;
+        render();
+    }
+
+    function toggleC(id) { document.getElementById('carea-'+id).classList.toggle('active'); }
+    
+    function addC(e, id) {
+        if(e.key === 'Enter' && e.target.value) {
+            const p = POSTS.find(x => x.id === id);
+            p.comments.push(e.target.value);
+            e.target.value = '';
+            render();
+        }
+    }
+
+    function postText() {
+        const t = document.getElementById('pThought');
+        if(!t.value) return;
+        POSTS.unshift({ id: Date.now(), uId: 0, img: "https://picsum.photos/seed/"+Math.random()+"/600/600", text: t.value, liked: false, comments: [] });
+        t.value = ''; render(); toast("Transmission Success ⚡");
+    }
+
+    function postImg(e) {
+        const file = e.target.files[0];
+        const url = URL.createObjectURL(file);
+        POSTS.unshift({ id: Date.now(), uId: 0, img: url, text: "New Upload! 📸", liked: false, comments: [] });
+        render(); toast("Photo Emitted ⚡");
+    }
+
+    function nativeShare(txt) {
+        if(navigator.share) navigator.share({ title: 'Nexus Social', text: txt, url: window.location.href });
+        else toast("Share link copied to clipboard!");
+    }
+
+    function openEdit() { document.getElementById('edit-modal').style.display = 'flex'; }
+    function closeEdit() { document.getElementById('edit-modal').style.display = 'none'; }
+    function saveName() { USERS[0].name = document.getElementById('newName').value || "Anmol"; closeEdit(); render(); toast("Identity Synced"); }
+    function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
+
+    render();
+</script>
 </body>
 </html>
