@@ -3,261 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Titan Social ✦ Pro</title>
+    <title>Quantum Social ✦ Nexus Edition</title>
     <style>
         :root {
-            --bg: #fafafa; --surf: #ffffff; --text: #262626; --muted: #8e8e8e;
-            --accent: #0095f6; --border: #dbdbdb; --grad: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            --glass: rgba(255, 255, 255, 0.9);
+            --bg: #0f172a; --surf: #1e293b; --text: #f8fafc; --muted: #94a3b8;
+            --accent: #38bdf8; --border: rgba(255,255,255,0.1);
+            --grad: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%);
+            --glass: rgba(30, 41, 59, 0.7);
         }
-        [data-theme="dark"] {
-            --bg: #000000; --surf: #121212; --text: #ffffff; --muted: #a8a8a8; --border: #262626; --glass: rgba(0, 0, 0, 0.8);
+        [data-theme="light"] {
+            --bg: #f1f5f9; --surf: #ffffff; --text: #0f172a; --muted: #64748b; --border: rgba(0,0,0,0.05); --glass: rgba(255,255,255,0.8);
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background: var(--bg); color: var(--text); transition: 0.3s; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; height: 100vh; }
 
-        /* Layout */
-        .app-wrapper { display: flex; max-width: 1200px; margin: 0 auto; height: 100vh; position: relative; }
-        
-        /* Left Sidebar (Desktop) */
-        nav.sidebar { width: 240px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 0; }
-        .logo { font-size: 24px; font-weight: bold; font-style: italic; margin-bottom: 30px; }
-        .nav-item { display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 500; }
-        .nav-item:hover { background: rgba(0,0,0,0.05); }
+        /* Cinematic Background */
+        .glow { position: fixed; width: 400px; height: 400px; background: var(--accent); filter: blur(150px); opacity: 0.15; z-index: -1; border-radius: 50%; top: -100px; right: -100px; }
 
-        /* Main Feed */
-        main.feed-container { flex: 1; overflow-y: auto; padding: 30px 50px; scrollbar-width: none; }
-        
-        /* Stories */
-        .stories-container { display: flex; gap: 15px; margin-bottom: 30px; padding: 10px 0; }
-        .story-circle { width: 75px; flex-shrink: 0; cursor: pointer; text-align: center; }
-        .ring { width: 66px; height: 66px; border-radius: 50%; padding: 2px; background: var(--grad); margin: 0 auto 5px; position: relative; }
-        .ring img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--bg); object-fit: cover; }
-        .story-circle.seen .ring { background: var(--border); }
-        .story-circle small { font-size: 12px; display: block; overflow: hidden; text-overflow: ellipsis; }
+        /* High-End Sidebar */
+        nav.nexus-side { width: 280px; height: 100vh; background: var(--glass); backdrop-filter: blur(20px); border-right: 1px solid var(--border); padding: 40px 30px; display: flex; flex-direction: column; position: fixed; left: 0; z-index: 1000; }
+        .logo-box { font-size: 28px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 50px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px; }
+        .logo-box::before { content: ''; width: 12px; height: 12px; background: var(--grad); border-radius: 3px; display: inline-block; animation: pulse 2s infinite; }
 
-        /* Thoughts (Notes) */
-        .thoughts-bubble { background: var(--surf); border: 1px solid var(--border); padding: 8px 12px; border-radius: 20px; font-size: 12px; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: max-content; max-width: 80px; white-space: nowrap; overflow: hidden; }
+        .nav-btn { display: flex; align-items: center; gap: 15px; padding: 16px; border-radius: 14px; cursor: pointer; transition: 0.3s; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+        .nav-btn:hover { background: rgba(56, 189, 248, 0.1); color: var(--accent); transform: scale(1.05); }
+        .nav-btn.active { background: var(--grad); color: white; box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.4); }
 
-        /* Post Card */
-        .post-card { background: var(--surf); border-bottom: 1px solid var(--border); margin-bottom: 30px; padding-bottom: 20px; }
-        .post-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
-        .user-info { display: flex; align-items: center; gap: 10px; }
-        .user-info img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
-        .post-media { width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
-        .post-media img { width: 100%; display: block; }
-        .post-actions { display: flex; gap: 15px; padding: 12px 0; font-size: 20px; }
-        .post-actions span { cursor: pointer; transition: 0.2s; }
-        .post-actions span:hover { transform: scale(1.1); }
+        /* Main Viewport */
+        .viewport { margin-left: 280px; height: 100vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 400px; scroll-behavior: smooth; }
+        .feed-engine { padding: 40px; max-width: 750px; width: 100%; margin: 0 auto; }
 
-        /* Modals */
-        .modal { position: fixed; inset:0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .story-view { width: 100%; max-width: 380px; height: 85vh; position: relative; border-radius: 10px; overflow: hidden; }
-        .story-view img { width: 100%; height: 100%; object-fit: cover; }
-        .prog-bar { position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: rgba(255,255,255,0.3); }
-        .prog-fill { height: 100%; background: #fff; width: 0%; }
+        /* Futuristic Story Bar */
+        .story-nexus { display: flex; gap: 20px; overflow-x: auto; padding: 10px 0 30px; scrollbar-width: none; }
+        .story-node { text-align: center; cursor: pointer; min-width: 85px; position: relative; }
+        .ring-3d { width: 80px; height: 80px; border-radius: 28px; padding: 3px; background: var(--grad); transition: 0.4s; position: relative; }
+        .ring-3d:hover { transform: rotate(10deg) scale(1.1); }
+        .ring-3d img { width: 100%; height: 100%; border-radius: 25px; border: 4px solid var(--bg); object-fit: cover; }
+        .story-node b { font-size: 12px; margin-top: 10px; display: block; opacity: 0.8; }
+        .live-tag { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800; border: 2px solid var(--bg); }
 
-        /* Bottom Nav (Mobile) */
-        .bottom-nav { display: none; position: fixed; bottom: 0; width: 100%; background: var(--surf); border-top: 1px solid var(--border); justify-content: space-around; padding: 10px; z-index: 1000; }
+        /* The Quantum Composer */
+        .composer-card { background: var(--glass); backdrop-filter: blur(20px); border-radius: 24px; padding: 25px; border: 1px solid var(--border); margin-bottom: 40px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2); }
+        .thought-input { width: 100%; background: transparent; border: none; font-size: 1.2rem; color: var(--text); outline: none; margin-bottom: 20px; resize: none; }
+        .actions-bar { display: flex; justify-content: space-between; border-top: 1px solid var(--border); pt: 20px; margin-top: 10px; padding-top: 15px; }
 
-        /* Profile Editor */
-        .editor-container { background: var(--surf); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; color: var(--text); }
-        .editor-container input, .editor-container textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
+        /* Dynamic Posts */
+        .quantum-post { background: var(--glass); border-radius: 30px; border: 1px solid var(--border); margin-bottom: 40px; overflow: hidden; transition: 0.3s; }
+        .quantum-post:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .post-media { width: 100%; height: 500px; object-fit: cover; border-radius: 0 0 30px 30px; cursor: pointer; }
+        .interaction-panel { padding: 25px; display: flex; gap: 25px; font-size: 26px; }
 
-        @media (max-width: 768px) {
-            nav.sidebar { display: none; }
-            .bottom-nav { display: flex; }
-            main.feed-container { padding: 15px; }
-        }
+        /* Analytics Sidebar */
+        .analytics { padding: 40px; border-left: 1px solid var(--border); background: var(--glass); backdrop-filter: blur(30px); position: sticky; top: 0; }
+        .stat-card { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .pulse { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; margin-right: 10px; box-shadow: 0 0 10px #22c55e; }
+
+        /* Interactive Modals */
+        .overlay { position: fixed; inset:0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+        .overlay.active { display: flex; }
+        .viewer-box { width: 420px; height: 85vh; position: relative; border-radius: 30px; overflow: hidden; box-shadow: 0 0 100px rgba(56, 189, 248, 0.3); }
+        .p-track { position: absolute; top: 20px; left: 15px; right: 15px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .p-bar { height: 100%; background: #fff; width: 0%; box-shadow: 0 0 10px #fff; }
+
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        @media (max-width: 1200px) { .analytics { display: none; } .viewport { grid-template-columns: 1fr; } }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="dark">
+    <div class="glow"></div>
+    <div class="glow" style="bottom:-100px; left:-100px; background:#a855f7;"></div>
 
-<div class="app-wrapper">
-    <nav class="sidebar">
-        <div class="logo">TITAN ✦</div>
-        <div class="nav-item" onclick="location.reload()">🏠 Home</div>
-        <div class="nav-item" onclick="showToast('Explore Feed Coming Soon!')">🔍 Explore</div>
-        <div class="nav-item" onclick="openMessages()">💬 Messages</div>
-        <div class="nav-item" onclick="openEditor()">⚙️ Edit Profile</div>
-        <div class="nav-item" onclick="toggleTheme()">🌓 Toggle Mode</div>
+    <nav class="nexus-side">
+        <div class="logo-box">NEXUS</div>
+        <div class="nav-btn active" onclick="location.reload()"><span>🏠</span> Quantum Feed</div>
+        <div class="nav-btn" onclick="openExplore()"><span>🚀</span> Discover</div>
+        <div class="nav-btn" onclick="msgLive()"><span>⚡</span> Neural Chat</div>
+        <div class="nav-btn" onclick="openSettings()"><span>💎</span> Edit Workspace</div>
+        <div class="nav-btn" onclick="toggleTheme()" style="margin-top: auto;"><span>🌓</span> Switch Vision</div>
     </nav>
 
-    <main class="feed-container">
-        <div class="stories-container" id="storyRow"></div>
+    <div class="viewport">
+        <main class="feed-engine">
+            <div class="story-nexus" id="storyNexus"></div>
 
-        <div style="background: var(--surf); padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px;">
-            <textarea id="myThought" placeholder="Share a thought..." style="width:100%; background:transparent; border:none; outline:none; color:var(--text); resize:none;"></textarea>
-            <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                <input type="file" id="postImgInp" style="display:none" onchange="createPost(event)">
-                <button onclick="document.getElementById('postImgInp').click()" style="background:none; border:none; cursor:pointer;">🖼️ Photo</button>
-                <button onclick="createPost()" style="background:var(--accent); color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">Share</button>
-            </div>
-        </div>
-
-        <div id="feed"></div>
-    </main>
-</div>
-
-<div class="bottom-nav">
-    <span onclick="location.reload()">🏠</span>
-    <span onclick="showToast('Search active')">🔍</span>
-    <span onclick="openMessages()">💬</span>
-    <span onclick="openEditor()">👤</span>
-</div>
-
-<div class="modal" id="storyModal" onclick="closeStory()">
-    <div class="story-view" onclick="event.stopPropagation()">
-        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
-        <img id="modalImg" src="">
-        <div id="modalCap" style="position:absolute; bottom:30px; left:20px; color:white; text-shadow: 1px 1px 5px #000; font-weight:bold;"></div>
-    </div>
-</div>
-
-<div class="modal" id="editorModal">
-    <div class="editor-container">
-        <h3>Edit Profile</h3>
-        <label>Name</label><input type="text" id="editName" value="Titan User">
-        <label>Bio</label><textarea id="editBio">Exploring the Titan Social...</textarea>
-        <button onclick="saveProfile()" style="background:var(--accent); color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer;">Update Profile</button>
-        <button onclick="closeModals()" style="background:none; border:none; width:100%; margin-top:10px; color:var(--muted); cursor:pointer;">Cancel</button>
-    </div>
-</div>
-
-<div id="toast" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; display:none; z-index:9999;"></div>
-
-<script>
-    // Expanded Database
-    const USERS = [
-        { id: 0, name: "You", handle: "@me", avatar: "https://i.pravatar.cc/150?img=12", note: "Feeling lucky! 🍀" },
-        { id: 1, name: "Jessica Smith", handle: "@jess_smith", avatar: "https://i.pravatar.cc/150?img=32", note: "Working late ☕" },
-        { id: 2, name: "Marco V", handle: "@marco_v", avatar: "https://i.pravatar.cc/150?img=11", note: "Hiking vibes ⛰️" },
-        { id: 3, name: "Arya Stark", handle: "@arya_s", avatar: "https://i.pravatar.cc/150?img=44", note: "Winter is coming" },
-        { id: 4, name: "Professor X", handle: "@charles", avatar: "https://i.pravatar.cc/150?img=68", note: "Mind reading mode" }
-    ];
-
-    const STORIES = [
-        { uId: 1, img: "https://picsum.photos/seed/s1/400/700", cap: "Morning coffee rituals" },
-        { uId: 2, img: "https://picsum.photos/seed/s2/400/700", cap: "The climb was worth it!" },
-        { uId: 3, img: "https://picsum.photos/seed/s3/400/700", cap: "New project alert!" },
-        { uId: 4, img: "https://picsum.photos/seed/s4/400/700", cap: "Back in the academy" }
-    ];
-
-    let POSTS = [
-        { id: 1, uId: 1, text: "Just landed in Tokyo! 🇯🇵 The lights are incredible.", img: "https://picsum.photos/seed/t1/600/600", likes: 1402, liked: false },
-        { id: 2, uId: 3, text: "New sword training today. Skills getting better! ⚔️", img: "https://picsum.photos/seed/t2/600/600", likes: 231, liked: false }
-    ];
-
-    let storyTimer;
-
-    function renderUI() {
-        // Render Stories
-        const storyRow = document.getElementById('storyRow');
-        storyRow.innerHTML = USERS.map(u => {
-            const hasStory = STORIES.findIndex(s => s.uId === u.id);
-            if (hasStory === -1 && u.id !== 0) return ''; // Only show users with stories
-            return `
-                <div class="story-circle" onclick="openStory(${hasStory})">
-                    <div class="ring">
-                        ${u.note ? `<div class="thoughts-bubble">${u.note}</div>` : ''}
-                        <img src="${u.avatar}">
+            <div class="composer-card">
+                <textarea id="mainInp" class="thought-input" placeholder="What's your current frequency, Anmol?"></textarea>
+                <div class="actions-bar">
+                    <div style="display:flex; gap:15px;">
+                        <span style="cursor:pointer;" onclick="document.getElementById('hiddenFile').click()">📸 Photo</span>
+                        <input type="file" id="hiddenFile" style="display:none" onchange="postDynamic(event)">
+                        <span style="cursor:pointer;" onclick="msgLive()">🎙️ Voice</span>
                     </div>
-                    <small>${u.id === 0 ? 'Your Story' : u.name.split(' ')[0]}</small>
-                </div>`;
-        }).join('');
+                    <button onclick="postDynamic()" style="background:var(--grad); color:white; border:none; padding:8px 25px; border-radius:12px; font-weight:800; cursor:pointer;">EMIT</button>
+                </div>
+            </div>
 
-        // Render Feed
-        const feed = document.getElementById('feed');
-        feed.innerHTML = POSTS.map(p => `
-            <div class="post-card">
-                <div class="post-header">
-                    <div class="user-info">
-                        <img src="${USERS[p.uId].avatar}">
+            <div id="quantumFeed"></div>
+        </main>
+
+        <aside class="analytics">
+            <h3 style="margin-bottom:20px;">System Analytics</h3>
+            <div class="stat-card">
+                <small style="color:var(--muted)">LIVE TRAFFIC</small>
+                <div style="font-size:24px; font-weight:800;"><span class="pulse"></span> 1,204 Active</div>
+            </div>
+            <div class="stat-card">
+                <small style="color:var(--muted)">DATA ANALYTICS</small>
+                <div style="font-size:18px; color:var(--accent);">⚡ Processing Vibe 8.2...</div>
+            </div>
+            <div class="stat-card" style="margin-top:30px;">
+                <h4 style="margin-bottom:15px;">Global Hotspots</h4>
+                <div id="hotspots"></div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="overlay" id="sOverlay" onclick="closeStory()">
+        <div class="viewer-box" onclick="event.stopPropagation()">
+            <div class="p-track"><div class="p-bar" id="pBar"></div></div>
+            <img id="vImg" src="" style="width:100%; height:100%; object-fit:cover;">
+            <div id="vUser" style="position:absolute; bottom:40px; left:30px; color:white; font-size:22px; font-weight:800; text-shadow:0 0 20px rgba(0,0,0,0.5);"></div>
+        </div>
+    </div>
+
+    <div class="overlay" id="setOverlay">
+        <div style="background:var(--surf); padding:40px; border-radius:40px; width:450px; border:1px solid var(--border);">
+            <h2>Neural Profile</h2>
+            <input type="text" id="nn" placeholder="Display Identity" style="width:100%; padding:15px; border-radius:15px; margin:20px 0; background:var(--bg); color:var(--text); border:1px solid var(--border);">
+            <button onclick="saveProfile()" style="width:100%; padding:15px; background:var(--grad); color:white; border:none; border-radius:15px; font-weight:800; cursor:pointer;">Update Nexus</button>
+        </div>
+    </div>
+
+    <div id="toast" style="position:fixed; top:30px; right:30px; background:var(--grad); color:white; padding:15px 30px; border-radius:20px; font-weight:bold; display:none; z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.3);"></div>
+
+    <script>
+        const USERS = [
+            {id:0, name:"Anmol Rathod", avatar:"https://i.pravatar.cc/150?u=a", story:"https://picsum.photos/seed/a/400/800", live:true},
+            {id:1, name:"Jessica Lane", avatar:"https://i.pravatar.cc/150?u=b", story:"https://picsum.photos/seed/b/400/800", live:false},
+            {id:2, name:"Swaraj Patil", avatar:"https://i.pravatar.cc/150?u=c", story:"https://picsum.photos/seed/c/400/800", live:true},
+            {id:3, name:"Rahul Singh", avatar:"https://i.pravatar.cc/150?u=d", story:"https://picsum.photos/seed/d/400/800", live:false},
+            {id:4, name:"Elena Rossi", avatar:"https://i.pravatar.cc/150?u=e", story:"https://picsum.photos/seed/e/400/800", live:false},
+            {id:5, name:"Marcus Thorne", avatar:"https://i.pravatar.cc/150?u=f", story:"https://picsum.photos/seed/f/400/800", live:true},
+            {id:6, name:"Zoe Kravitz", avatar:"https://i.pravatar.cc/150?u=g", story:"https://picsum.photos/seed/g/400/800", live:false},
+            {id:7, name:"Victor Stone", avatar:"https://i.pravatar.cc/150?u=h", story:"https://picsum.photos/seed/h/400/800", live:true},
+            {id:8, name:"Diana Prince", avatar:"https://i.pravatar.cc/150?u=i", story:"https://picsum.photos/seed/i/400/800", live:false},
+            {id:9, name:"Sumit Gupta", avatar:"https://i.pravatar.cc/150?u=j", story:"https://picsum.photos/seed/j/400/800", live:true}
+        ];
+
+        let POSTS = [
+            {id:1, uId:2, img:"https://picsum.photos/seed/p1/800/800", txt:"Neural Networks are the future of connectivity. 🧠", liked:false},
+            {id:2, uId:5, img:"https://picsum.photos/seed/p2/800/800", txt:"Architecture redefined in the digital age. 🏛️", liked:false}
+        ];
+
+        let sInt;
+
+        function refresh() {
+            const nexus = document.getElementById('storyNexus');
+            nexus.innerHTML = USERS.map(u => `
+                <div class="story-node" onclick="viewStory(${u.id})">
+                    <div class="ring-3d"><img src="${u.avatar}"></div>
+                    ${u.live ? '<span class="live-tag">LIVE</span>' : ''}
+                    <b>${u.name.split(' ')[0]}</b>
+                </div>
+            `).join('');
+
+            const feed = document.getElementById('quantumFeed');
+            feed.innerHTML = POSTS.map(p => `
+                <div class="quantum-post">
+                    <div style="padding:20px; display:flex; align-items:center; gap:12px;">
+                        <img src="${USERS[p.uId].avatar}" style="width:35px; border-radius:10px;">
                         <b>${USERS[p.uId].name}</b>
                     </div>
-                    <span>⋮</span>
+                    <img src="${p.img}" class="post-media" ondblclick="like(${p.id})">
+                    <div class="interaction-panel">
+                        <span onclick="like(${p.id})" style="cursor:pointer;">${p.liked?'❤️':'🤍'}</span>
+                        <span onclick="toast('Neural Link established...')">💬</span>
+                        <span onclick="toast('Data broadcasted!')">✈️</span>
+                    </div>
+                    <div style="padding:0 25px 25px;"><b>${USERS[p.uId].name}</b> ${p.txt}</div>
                 </div>
-                ${p.img ? `<div class="post-media"><img src="${p.img}"></div>` : ''}
-                <div class="post-actions">
-                    <span onclick="likePost(${p.id})">${p.liked ? '❤️' : '🤍'}</span>
-                    <span onclick="showToast('Comments disabled')">💬</span>
-                    <span onclick="showToast('Shared!')">✈️</span>
+            `).join('');
+
+            document.getElementById('hotspots').innerHTML = USERS.slice(0,4).map(u => `
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <small>${u.name}</small>
+                    <small style="color:var(--accent)">Active</small>
                 </div>
-                <p><b>${USERS[p.uId].name}</b> ${p.text}</p>
-                <small style="color:var(--muted); font-size:10px;">JUST NOW</small>
-            </div>`).join('');
-    }
-
-    function openStory(idx) {
-        if (idx === -1) { showToast("You haven't added a story yet!"); return; }
-        const modal = document.getElementById('storyModal');
-        const fill = document.getElementById('progFill');
-        document.getElementById('modalImg').src = STORIES[idx].img;
-        document.getElementById('modalCap').innerText = STORIES[idx].cap;
-        modal.classList.add('active');
-
-        let w = 0;
-        clearInterval(storyTimer);
-        storyTimer = setInterval(() => {
-            w += 1;
-            fill.style.width = w + '%';
-            if (w >= 100) closeStory();
-        }, 40);
-    }
-
-    function closeStory() {
-        document.getElementById('storyModal').classList.remove('active');
-        clearInterval(storyTimer);
-    }
-
-    function createPost(event) {
-        const text = document.getElementById('myThought').value;
-        let img = null;
-        if (event && event.target.files[0]) {
-            img = URL.createObjectURL(event.target.files[0]);
+            `).join('');
         }
-        if (!text && !img) return;
-        POSTS.unshift({ id: Date.now(), uId: 0, text: text, img: img, likes: 0, liked: false });
-        document.getElementById('myThought').value = '';
-        renderUI();
-        showToast('Vibe Shared! ✨');
-    }
 
-    function openMessages() {
-        showToast('💬 Jessica: "Hey! How are you?" <br> 💬 Marco: "Good Morning!"');
-    }
+        function viewStory(id) {
+            const u = USERS[id];
+            const overlay = document.getElementById('sOverlay');
+            document.getElementById('vImg').src = u.story;
+            document.getElementById('vUser').innerText = u.name;
+            overlay.classList.add('active');
 
-    function openEditor() { document.getElementById('editorModal').classList.add('active'); }
-    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
+            let w = 0;
+            clearInterval(sInt);
+            sInt = setInterval(() => {
+                w += 1;
+                document.getElementById('pBar').style.width = w + '%';
+                if(w >= 100) closeStory();
+            }, 30);
+        }
 
-    function saveProfile() {
-        USERS[0].name = document.getElementById('editName').value;
-        showToast('Profile Updated! 👤');
-        closeModals();
-        renderUI();
-    }
+        function closeStory() { document.getElementById('sOverlay').classList.remove('active'); clearInterval(sInt); }
 
-    function likePost(id) {
-        const p = POSTS.find(x => x.id === id);
-        p.liked = !p.liked;
-        p.likes += p.liked ? 1 : -1;
-        renderUI();
-    }
+        function postDynamic(e) {
+            const inp = document.getElementById('mainInp');
+            let img = "https://picsum.photos/seed/"+Math.random()+"/800/800";
+            if(e && e.target.files[0]) img = URL.createObjectURL(e.target.files[0]);
+            if(!inp.value && !e) return;
+            POSTS.unshift({id:Date.now(), uId:0, img:img, txt:inp.value || "Quantum Broadcast", liked:false});
+            inp.value = ''; refresh(); toast("Broadcast Transmitted ⚡");
+        }
 
-    function toggleTheme() {
-        const body = document.body;
-        const next = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', next);
-    }
+        function like(id) {
+            const p = POSTS.find(x => x.id === id);
+            p.liked = !p.liked;
+            refresh();
+            if(p.liked) toast("Neural Link ❤️");
+        }
 
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerHTML = msg; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 3000);
-    }
+        function openExplore() {
+            toast("Synthesizing Explore Feed...");
+            document.getElementById('quantumFeed').innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+                ${Array.from({length:21}).map((_,i)=>`<img src="https://picsum.photos/seed/ex${i}/400/400" style="width:100%; border-radius:15px;">`).join('')}
+            </div>`;
+        }
 
-    renderUI();
-</script>
+        function toggleTheme() {
+            const b = document.body;
+            b.setAttribute('data-theme', b.getAttribute('data-theme')==='dark'?'light':'dark');
+            toast("Optics Recalibrated");
+        }
+
+        function msgLive() { toast("Jessica: 'Nexus looks amazing!' <br> Swaraj: 'Check the new data pipeline.'"); }
+        function openSettings() { document.getElementById('setOverlay').classList.add('active'); }
+        function saveProfile() { USERS[0].name = document.getElementById('nn').value || "Anmol"; document.getElementById('setOverlay').classList.remove('active'); refresh(); toast("Nexus Identity Updated"); }
+        function toast(m) { const t = document.getElementById('toast'); t.innerHTML = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
+
+        refresh();
+    </script>
 </body>
 </html>
