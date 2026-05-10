@@ -3,226 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vibe Social ✦ Dynamic</title>
+    <title>Titan Social ✦ Pro</title>
     <style>
         :root {
-            --bg: #f0f2f5; --surf: #ffffff; --text: #1a1a1a; --muted: #65676b;
-            --accent: #7c6dfa; --border: #e4e6eb; --grad: linear-gradient(135deg, #7c6dfa, #fa6d9a);
+            --bg: #fafafa; --surf: #ffffff; --text: #262626; --muted: #8e8e8e;
+            --accent: #0095f6; --border: #dbdbdb; --grad: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            --glass: rgba(255, 255, 255, 0.9);
         }
         [data-theme="dark"] {
-            --bg: #0b0e11; --surf: #15181c; --text: #f5f5f5; --muted: #a0a0a0; --border: #2f3336;
+            --bg: #000000; --surf: #121212; --text: #ffffff; --muted: #a8a8a8; --border: #262626; --glass: rgba(0, 0, 0, 0.8);
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: var(--text); transition: 0.3s; overflow-x: hidden; }
-        
-        nav { height: 60px; background: var(--surf); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top:0; z-index:100; border-bottom: 1px solid var(--border); }
-        .app-container { display: grid; grid-template-columns: 240px 1fr 320px; max-width: 1200px; margin: 0 auto; gap: 20px; padding: 20px; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: var(--bg); color: var(--text); transition: 0.3s; }
 
-        /* Stories Row */
-        .stories-row { display: flex; gap: 12px; padding: 10px 0; overflow-x: auto; scrollbar-width: none; }
-        .story-card { min-width: 70px; cursor: pointer; text-align: center; }
-        .story-ring { width: 66px; height: 66px; border-radius: 50%; padding: 3px; background: var(--grad); margin-bottom: 5px; }
-        .story-ring img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--surf); object-fit: cover; }
+        /* Layout */
+        .app-wrapper { display: flex; max-width: 1200px; margin: 0 auto; height: 100vh; position: relative; }
+        
+        /* Left Sidebar (Desktop) */
+        nav.sidebar { width: 240px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; position: sticky; top: 0; }
+        .logo { font-size: 24px; font-weight: bold; font-style: italic; margin-bottom: 30px; }
+        .nav-item { display: flex; align-items: center; gap: 15px; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .nav-item:hover { background: rgba(0,0,0,0.05); }
+
+        /* Main Feed */
+        main.feed-container { flex: 1; overflow-y: auto; padding: 30px 50px; scrollbar-width: none; }
+        
+        /* Stories */
+        .stories-container { display: flex; gap: 15px; margin-bottom: 30px; padding: 10px 0; }
+        .story-circle { width: 75px; flex-shrink: 0; cursor: pointer; text-align: center; }
+        .ring { width: 66px; height: 66px; border-radius: 50%; padding: 2px; background: var(--grad); margin: 0 auto 5px; position: relative; }
+        .ring img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--bg); object-fit: cover; }
+        .story-circle.seen .ring { background: var(--border); }
+        .story-circle small { font-size: 12px; display: block; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Thoughts (Notes) */
+        .thoughts-bubble { background: var(--surf); border: 1px solid var(--border); padding: 8px 12px; border-radius: 20px; font-size: 12px; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: max-content; max-width: 80px; white-space: nowrap; overflow: hidden; }
 
         /* Post Card */
-        .card { background: var(--surf); border-radius: 12px; border: 1px solid var(--border); padding: 15px; margin-bottom: 20px; position: relative; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .post-img { width: 100%; border-radius: 8px; margin: 10px 0; }
-        
-        /* React Hot Button (Heart Burst) */
-        .action-btn { cursor: pointer; display: flex; align-items: center; gap: 5px; font-weight: 600; color: var(--muted); transition: 0.2s; }
-        .action-btn.liked { color: #f91880; transform: scale(1.1); }
-        @keyframes burst {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(2.5) translateY(-20px); opacity: 0; }
+        .post-card { background: var(--surf); border-bottom: 1px solid var(--border); margin-bottom: 30px; padding-bottom: 20px; }
+        .post-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-info img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
+        .post-media { width: 100%; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+        .post-media img { width: 100%; display: block; }
+        .post-actions { display: flex; gap: 15px; padding: 12px 0; font-size: 20px; }
+        .post-actions span { cursor: pointer; transition: 0.2s; }
+        .post-actions span:hover { transform: scale(1.1); }
+
+        /* Modals */
+        .modal { position: fixed; inset:0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .story-view { width: 100%; max-width: 380px; height: 85vh; position: relative; border-radius: 10px; overflow: hidden; }
+        .story-view img { width: 100%; height: 100%; object-fit: cover; }
+        .prog-bar { position: absolute; top: 10px; left: 10px; right: 10px; height: 2px; background: rgba(255,255,255,0.3); }
+        .prog-fill { height: 100%; background: #fff; width: 0%; }
+
+        /* Bottom Nav (Mobile) */
+        .bottom-nav { display: none; position: fixed; bottom: 0; width: 100%; background: var(--surf); border-top: 1px solid var(--border); justify-content: space-around; padding: 10px; z-index: 1000; }
+
+        /* Profile Editor */
+        .editor-container { background: var(--surf); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; color: var(--text); }
+        .editor-container input, .editor-container textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
+
+        @media (max-width: 768px) {
+            nav.sidebar { display: none; }
+            .bottom-nav { display: flex; }
+            main.feed-container { padding: 15px; }
         }
-        .heart-particle { position: absolute; color: #f91880; pointer-events: none; animation: burst 0.6s ease-out forwards; font-size: 20px; }
-
-        /* Story Viewer Modal */
-        .story-modal { position: fixed; inset:0; background: rgba(0,0,0,0.95); z-index: 2000; display: none; align-items: center; justify-content: center; }
-        .story-modal.active { display: flex; }
-        .story-content { width: 100%; max-width: 400px; height: 85vh; position: relative; border-radius: 15px; overflow: hidden; }
-        .story-content img { width: 100%; height: 100%; object-fit: cover; }
-        .progress-bar { position: absolute; top: 10px; left: 10px; right: 10px; height: 3px; background: rgba(255,255,255,0.3); }
-        .progress-fill { height: 100%; background: #fff; width: 0%; }
-
-        @media (max-width: 850px) { .app-container { grid-template-columns: 1fr; } .side { display: none; } }
     </style>
 </head>
 <body data-theme="light">
 
-<nav>
-    <h2 style="background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Vibe ✦</h2>
-    <div style="display:flex; gap:15px; align-items:center;">
-        <button onclick="toggleTheme()" id="themeBtn" style="background:none; border:none; cursor:pointer; font-size:20px;">🌙</button>
-        <img src="https://i.pravatar.cc/150?img=12" class="avatar" style="width:32px; height:32px;">
-    </div>
-</nav>
+<div class="app-wrapper">
+    <nav class="sidebar">
+        <div class="logo">TITAN ✦</div>
+        <div class="nav-item" onclick="location.reload()">🏠 Home</div>
+        <div class="nav-item" onclick="showToast('Explore Feed Coming Soon!')">🔍 Explore</div>
+        <div class="nav-item" onclick="openMessages()">💬 Messages</div>
+        <div class="nav-item" onclick="openEditor()">⚙️ Edit Profile</div>
+        <div class="nav-item" onclick="toggleTheme()">🌓 Toggle Mode</div>
+    </nav>
 
-<div class="app-container">
-    <div class="side">
-        <div class="card">
-            <p><b>Home</b></p><br><p>Explore</p><br><p>Messages</p>
-        </div>
-    </div>
+    <main class="feed-container">
+        <div class="stories-container" id="storyRow"></div>
 
-    <main>
-        <div class="stories-row" id="storyRow"></div>
-        
-        <div class="card">
-            <textarea id="postText" placeholder="What's happening?" style="width:100%; border:none; background:transparent; outline:none; font-size:1.1rem; color:var(--text);"></textarea>
-            <hr style="margin:10px 0; opacity:0.1;">
-            <div style="display:flex; justify-content:flex-end;">
-                <button onclick="createPost()" style="background:var(--grad); color:white; border:none; padding:8px 20px; border-radius:20px; font-weight:600; cursor:pointer;">Post</button>
+        <div style="background: var(--surf); padding: 15px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 20px;">
+            <textarea id="myThought" placeholder="Share a thought..." style="width:100%; background:transparent; border:none; outline:none; color:var(--text); resize:none;"></textarea>
+            <div style="display:flex; justify-content:space-between; margin-top:10px;">
+                <input type="file" id="postImgInp" style="display:none" onchange="createPost(event)">
+                <button onclick="document.getElementById('postImgInp').click()" style="background:none; border:none; cursor:pointer;">🖼️ Photo</button>
+                <button onclick="createPost()" style="background:var(--accent); color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">Share</button>
             </div>
         </div>
 
         <div id="feed"></div>
     </main>
+</div>
 
-    <div class="side">
-        <div class="card">
-            <h4>Suggestions</h4>
-            <div id="suggestions" style="margin-top:15px;"></div>
-        </div>
+<div class="bottom-nav">
+    <span onclick="location.reload()">🏠</span>
+    <span onclick="showToast('Search active')">🔍</span>
+    <span onclick="openMessages()">💬</span>
+    <span onclick="openEditor()">👤</span>
+</div>
+
+<div class="modal" id="storyModal" onclick="closeStory()">
+    <div class="story-view" onclick="event.stopPropagation()">
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        <img id="modalImg" src="">
+        <div id="modalCap" style="position:absolute; bottom:30px; left:20px; color:white; text-shadow: 1px 1px 5px #000; font-weight:bold;"></div>
     </div>
 </div>
 
-<div class="story-modal" id="storyModal" onclick="closeStory()">
-    <div class="story-content" onclick="event.stopPropagation()">
-        <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
-        <img src="" id="storyImg">
-        <div style="position:absolute; bottom:20px; left:20px; color:white;" id="storyCap"></div>
+<div class="modal" id="editorModal">
+    <div class="editor-container">
+        <h3>Edit Profile</h3>
+        <label>Name</label><input type="text" id="editName" value="Titan User">
+        <label>Bio</label><textarea id="editBio">Exploring the Titan Social...</textarea>
+        <button onclick="saveProfile()" style="background:var(--accent); color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer;">Update Profile</button>
+        <button onclick="closeModals()" style="background:none; border:none; width:100%; margin-top:10px; color:var(--muted); cursor:pointer;">Cancel</button>
     </div>
 </div>
+
+<div id="toast" style="position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; display:none; z-index:9999;"></div>
 
 <script>
+    // Expanded Database
     const USERS = [
-        { id: 0, name: "Me", avatar: "https://i.pravatar.cc/150?img=12", followers: 120 },
-        { id: 1, name: "Sarah", avatar: "https://i.pravatar.cc/150?img=32", followers: 450 },
-        { id: 2, name: "David", avatar: "https://i.pravatar.cc/150?img=11", followers: 890 }
+        { id: 0, name: "You", handle: "@me", avatar: "https://i.pravatar.cc/150?img=12", note: "Feeling lucky! 🍀" },
+        { id: 1, name: "Jessica Smith", handle: "@jess_smith", avatar: "https://i.pravatar.cc/150?img=32", note: "Working late ☕" },
+        { id: 2, name: "Marco V", handle: "@marco_v", avatar: "https://i.pravatar.cc/150?img=11", note: "Hiking vibes ⛰️" },
+        { id: 3, name: "Arya Stark", handle: "@arya_s", avatar: "https://i.pravatar.cc/150?img=44", note: "Winter is coming" },
+        { id: 4, name: "Professor X", handle: "@charles", avatar: "https://i.pravatar.cc/150?img=68", note: "Mind reading mode" }
     ];
 
     const STORIES = [
-        { uId: 1, img: "https://picsum.photos/seed/s1/400/700", cap: "Beach day! 🏖️" },
-        { uId: 2, img: "https://picsum.photos/seed/s2/400/700", cap: "New studio setup 🎧" },
-        { uId: 1, img: "https://picsum.photos/seed/s3/400/700", cap: "Coffee first ☕" }
+        { uId: 1, img: "https://picsum.photos/seed/s1/400/700", cap: "Morning coffee rituals" },
+        { uId: 2, img: "https://picsum.photos/seed/s2/400/700", cap: "The climb was worth it!" },
+        { uId: 3, img: "https://picsum.photos/seed/s3/400/700", cap: "New project alert!" },
+        { uId: 4, img: "https://picsum.photos/seed/s4/400/700", cap: "Back in the academy" }
     ];
 
     let POSTS = [
-        { id: 101, uId: 1, text: "The future of web design is looking bright! #UIUX", img: "https://picsum.photos/seed/p1/600/400", likes: 24, liked: false }
+        { id: 1, uId: 1, text: "Just landed in Tokyo! 🇯🇵 The lights are incredible.", img: "https://picsum.photos/seed/t1/600/600", likes: 1402, liked: false },
+        { id: 2, uId: 3, text: "New sword training today. Skills getting better! ⚔️", img: "https://picsum.photos/seed/t2/600/600", likes: 231, liked: false }
     ];
 
-    let storyInterval;
+    let storyTimer;
 
-    function toggleTheme() {
-        const body = document.body;
-        const current = body.getAttribute('data-theme');
-        const next = current === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', next);
-        document.getElementById('themeBtn').innerText = next === 'light' ? '🌙' : '☀️';
-    }
+    function renderUI() {
+        // Render Stories
+        const storyRow = document.getElementById('storyRow');
+        storyRow.innerHTML = USERS.map(u => {
+            const hasStory = STORIES.findIndex(s => s.uId === u.id);
+            if (hasStory === -1 && u.id !== 0) return ''; // Only show users with stories
+            return `
+                <div class="story-circle" onclick="openStory(${hasStory})">
+                    <div class="ring">
+                        ${u.note ? `<div class="thoughts-bubble">${u.note}</div>` : ''}
+                        <img src="${u.avatar}">
+                    </div>
+                    <small>${u.id === 0 ? 'Your Story' : u.name.split(' ')[0]}</small>
+                </div>`;
+        }).join('');
 
-    function renderStories() {
-        const row = document.getElementById('storyRow');
-        row.innerHTML = STORIES.map((s, i) => `
-            <div class="story-card" onclick="openStory(${i})">
-                <div class="story-ring"><img src="${USERS[s.uId].avatar}"></div>
-                <small>${USERS[s.uId].name}</small>
-            </div>
-        `).join('');
+        // Render Feed
+        const feed = document.getElementById('feed');
+        feed.innerHTML = POSTS.map(p => `
+            <div class="post-card">
+                <div class="post-header">
+                    <div class="user-info">
+                        <img src="${USERS[p.uId].avatar}">
+                        <b>${USERS[p.uId].name}</b>
+                    </div>
+                    <span>⋮</span>
+                </div>
+                ${p.img ? `<div class="post-media"><img src="${p.img}"></div>` : ''}
+                <div class="post-actions">
+                    <span onclick="likePost(${p.id})">${p.liked ? '❤️' : '🤍'}</span>
+                    <span onclick="showToast('Comments disabled')">💬</span>
+                    <span onclick="showToast('Shared!')">✈️</span>
+                </div>
+                <p><b>${USERS[p.uId].name}</b> ${p.text}</p>
+                <small style="color:var(--muted); font-size:10px;">JUST NOW</small>
+            </div>`).join('');
     }
 
     function openStory(idx) {
+        if (idx === -1) { showToast("You haven't added a story yet!"); return; }
         const modal = document.getElementById('storyModal');
-        const img = document.getElementById('storyImg');
-        const cap = document.getElementById('storyCap');
         const fill = document.getElementById('progFill');
-        
-        img.src = STORIES[idx].img;
-        cap.innerText = STORIES[idx].cap;
+        document.getElementById('modalImg').src = STORIES[idx].img;
+        document.getElementById('modalCap').innerText = STORIES[idx].cap;
         modal.classList.add('active');
-        
-        let width = 0;
-        clearInterval(storyInterval);
-        storyInterval = setInterval(() => {
-            width += 1;
-            fill.style.width = width + '%';
-            if(width >= 100) {
-                clearInterval(storyInterval);
-                closeStory();
-            }
-        }, 30);
+
+        let w = 0;
+        clearInterval(storyTimer);
+        storyTimer = setInterval(() => {
+            w += 1;
+            fill.style.width = w + '%';
+            if (w >= 100) closeStory();
+        }, 40);
     }
 
     function closeStory() {
         document.getElementById('storyModal').classList.remove('active');
-        clearInterval(storyInterval);
+        clearInterval(storyTimer);
     }
 
-    function renderFeed() {
-        const feed = document.getElementById('feed');
-        feed.innerHTML = POSTS.map(p => `
-            <div class="card">
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <img src="${USERS[p.uId].avatar}" class="avatar">
-                    <b>${USERS[p.uId].name}</b>
-                </div>
-                <p style="margin:10px 0;">${p.text}</p>
-                ${p.img ? `<img src="${p.img}" class="post-img">` : ''}
-                <div class="action-btn ${p.liked ? 'liked' : ''}" onclick="handleLike(event, ${p.id})">
-                    <span class="heart-icon">${p.liked ? '❤️' : '🤍'}</span> <b>${p.likes}</b>
-                </div>
-            </div>
-        `).join('');
+    function createPost(event) {
+        const text = document.getElementById('myThought').value;
+        let img = null;
+        if (event && event.target.files[0]) {
+            img = URL.createObjectURL(event.target.files[0]);
+        }
+        if (!text && !img) return;
+        POSTS.unshift({ id: Date.now(), uId: 0, text: text, img: img, likes: 0, liked: false });
+        document.getElementById('myThought').value = '';
+        renderUI();
+        showToast('Vibe Shared! ✨');
     }
 
-    function handleLike(e, id) {
-        const post = POSTS.find(p => p.id === id);
-        post.liked = !post.liked;
-        post.likes += post.liked ? 1 : -1;
-
-        // Heart Burst Animation
-        const heart = document.createElement('div');
-        heart.innerHTML = '❤️';
-        heart.className = 'heart-particle';
-        heart.style.left = e.clientX + 'px';
-        heart.style.top = e.clientY + 'px';
-        document.body.appendChild(heart);
-        setTimeout(() => heart.remove(), 600);
-
-        renderFeed();
+    function openMessages() {
+        showToast('💬 Jessica: "Hey! How are you?" <br> 💬 Marco: "Good Morning!"');
     }
 
-    function createPost() {
-        const txt = document.getElementById('postText');
-        if(!txt.value) return;
-        POSTS.unshift({ id: Date.now(), uId: 0, text: txt.value, likes: 0, liked: false });
-        txt.value = '';
-        renderFeed();
+    function openEditor() { document.getElementById('editorModal').classList.add('active'); }
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
+
+    function saveProfile() {
+        USERS[0].name = document.getElementById('editName').value;
+        showToast('Profile Updated! 👤');
+        closeModals();
+        renderUI();
     }
 
-    function renderSuggestions() {
-        document.getElementById('suggestions').innerHTML = USERS.slice(1).map(u => `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <img src="${u.avatar}" class="avatar" style="width:30px; height:30px;">
-                    <div><small><b>${u.name}</b></small><br><small id="count-${u.id}" style="color:var(--muted)">${u.followers} followers</small></div>
-                </div>
-                <button onclick="follow(${u.id})" style="border:none; color:var(--accent); background:none; font-weight:600; cursor:pointer;">Follow</button>
-            </div>
-        `).join('');
+    function likePost(id) {
+        const p = POSTS.find(x => x.id === id);
+        p.liked = !p.liked;
+        p.likes += p.liked ? 1 : -1;
+        renderUI();
     }
 
-    function follow(id) {
-        const u = USERS.find(x => x.id === id);
-        u.followers++;
-        document.getElementById(`count-${id}`).innerText = u.followers + " followers";
+    function toggleTheme() {
+        const body = document.body;
+        const next = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', next);
     }
 
-    renderStories();
-    renderFeed();
-    renderSuggestions();
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerHTML = msg; t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    renderUI();
 </script>
 </body>
 </html>
