@@ -3,233 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus ✦ Infinite Edition</title>
+    <title>Nexus Ultra ✦ High-Fidelity Social</title>
     <style>
         :root {
-            --bg: #0b0e14; --surf: #161b22; --text: #f0f6fc; --muted: #8b949e;
-            --accent: #58a6ff; --border: #30363d;
-            --grad: linear-gradient(135deg, #1d4ed8 0%, #7e22ce 100%);
-            --glass: rgba(22, 27, 34, 0.8);
+            --bg: #000000; --surf: #121212; --text: #ffffff; --muted: #a8a8a8;
+            --accent: #0095f6; --border: #262626; --grad: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
         }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: -apple-system, system-ui, sans-serif; }
         body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
 
-        /* Layout */
-        .app-shell { display: flex; height: 100vh; }
+        /* Navigation */
+        nav.sidebar { width: 250px; height: 100vh; border-right: 1px solid var(--border); padding: 30px 20px; position: fixed; display: flex; flex-direction: column; background: var(--bg); z-index: 1000; }
+        .logo { font-size: 26px; font-weight: 800; margin-bottom: 40px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: italic; }
+        .nav-link { display: flex; align-items: center; gap: 15px; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 17px; margin-bottom: 5px; }
+        .nav-link:hover { background: rgba(255,255,255,0.05); }
+        .nav-link.active { font-weight: 700; }
+
+        /* Main Viewport */
+        main.main-content { margin-left: 250px; height: 100vh; overflow-y: auto; scrollbar-width: none; }
+        .container { max-width: 630px; margin: 0 auto; padding: 30px 15px; }
+
+        /* Story Bar */
+        .story-bar { display: flex; gap: 18px; overflow-x: auto; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 30px; scrollbar-width: none; }
+        .story-item { min-width: 80px; text-align: center; cursor: pointer; }
+        .ring { width: 72px; height: 72px; border-radius: 50%; padding: 3px; background: var(--grad); margin: 0 auto 8px; position: relative; }
+        .ring.seen { background: #555; }
+        .ring img { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #000; object-fit: cover; }
         
-        /* Sidebar */
-        nav.sidebar { width: 260px; border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; background: var(--surf); }
-        .logo { font-size: 24px; font-weight: 800; margin-bottom: 40px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
-        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; cursor: pointer; color: var(--muted); transition: 0.3s; margin-bottom: 5px; }
-        .nav-item:hover, .nav-item.active { background: var(--border); color: var(--text); }
-        .nav-item.active { background: var(--grad); color: white; }
+        /* Post Styling */
+        .post { background: #000; border-bottom: 1px solid var(--border); margin-bottom: 30px; padding-bottom: 20px; }
+        .post-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+        .user-meta { display: flex; align-items: center; gap: 12px; }
+        .user-meta img { width: 38px; height: 38px; border-radius: 50%; }
+        .post-media img { width: 100%; border-radius: 4px; border: 1px solid var(--border); }
+        .post-actions { display: flex; gap: 20px; padding: 15px 0; font-size: 24px; }
+        .post-actions span { cursor: pointer; transition: 0.1s; }
+        .post-actions span:active { transform: scale(1.3); }
 
-        /* Main Scroll Area */
-        main.content { flex: 1; overflow-y: auto; padding: 30px; scrollbar-width: none; }
-        .feed-wrap { max-width: 600px; margin: 0 auto; }
+        /* Comments */
+        .comment-area { display: none; margin-top: 10px; }
+        .comment-area.active { display: block; }
+        .comment-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border); color: #fff; padding: 10px 0; outline: none; }
 
-        /* Stories */
-        .story-bar { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 25px; border-bottom: 1px solid var(--border); margin-bottom: 25px; scrollbar-width: none; }
-        .story { min-width: 75px; text-align: center; cursor: pointer; }
-        .ring { width: 66px; height: 66px; border-radius: 22px; padding: 2px; background: var(--grad); margin: 0 auto 8px; position: relative; }
-        .ring img { width: 100%; height: 100%; border-radius: 20px; border: 3px solid var(--surf); object-fit: cover; }
-        .live-badge { position: absolute; top: -5px; right: -5px; background: #ff3e3e; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
+        /* Cinematic Story Viewer */
+        .viewer-overlay { position: fixed; inset: 0; background: #000; z-index: 5000; display: none; align-items: center; justify-content: center; }
+        .viewer-overlay.active { display: flex; }
+        .story-box { width: 100%; max-width: 420px; height: 92vh; position: relative; border-radius: 12px; overflow: hidden; }
+        .story-box img { width: 100%; height: 100%; object-fit: cover; }
+        .progress-cont { position: absolute; top: 15px; left: 10px; right: 10px; height: 2px; background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .progress-fill { height: 100%; background: #fff; width: 0%; }
+        .story-user-info { position: absolute; top: 30px; left: 20px; display: flex; align-items: center; gap: 10px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
 
-        /* Post Card */
-        .post { background: var(--surf); border: 1px solid var(--border); border-radius: 20px; margin-bottom: 30px; overflow: hidden; }
-        .post-header { padding: 15px; display: flex; align-items: center; gap: 12px; }
-        .post-header img { width: 38px; height: 38px; border-radius: 12px; object-fit: cover; }
-        .post-info b { display: block; font-size: 14px; }
-        .post-info span { font-size: 11px; color: var(--muted); }
-        .post-img { width: 100%; max-height: 550px; object-fit: cover; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: crosshair; }
-        .post-actions { padding: 15px; display: flex; gap: 20px; font-size: 22px; }
-        .post-actions span { cursor: pointer; transition: 0.2s; }
-        .post-actions span:hover { transform: scale(1.2); }
-        
-        /* Comment System */
-        .comment-box { padding: 0 15px 15px; display: none; border-top: 1px solid var(--border); pt: 10px; }
-        .comment-box.active { display: block; }
-        .comment-list { max-height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 13px; }
-        .comment-input-area { display: flex; gap: 10px; }
-        .comment-input-area input { flex: 1; background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; color: white; outline: none; }
+        /* Explore Grid */
+        #explore-view { display: none; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; }
+        #explore-view img { width: 100%; aspect-ratio: 1; object-fit: cover; cursor: pointer; }
 
-        /* Messages Panel */
-        .chat-panel { position: fixed; right: -400px; top: 0; width: 350px; height: 100vh; background: var(--surf); border-left: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 25px; }
-        .chat-panel.open { right: 0; }
-        .chat-bubble { background: var(--bg); padding: 10px 15px; border-radius: 15px; margin-bottom: 15px; font-size: 14px; border-left: 3px solid var(--accent); }
-        .my-chat { background: var(--grad); color: white; text-align: right; border-left: none; border-right: 3px solid white; }
+        /* Neural Chat UI */
+        #chat-view { display: none; flex-direction: column; height: 100vh; padding: 30px; background: #000; }
+        .message-bubble { background: #262626; padding: 12px 18px; border-radius: 20px; margin-bottom: 10px; max-width: 80%; align-self: flex-start; }
+        .message-bubble.me { background: var(--accent); align-self: flex-end; }
 
-        /* Toast */
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--grad); color: white; padding: 12px 25px; border-radius: 50px; display: none; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        /* Edit Profile Modal */
+        #edit-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: none; align-items: center; justify-content: center; }
+        .edit-card { background: #121212; padding: 30px; border-radius: 20px; width: 400px; border: 1px solid var(--border); }
+        .edit-card input { width: 100%; padding: 12px; margin: 15px 0; background: #262626; border: none; border-radius: 8px; color: #fff; }
+
+        .toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #fff; color: #000; padding: 12px 24px; border-radius: 30px; font-weight: 700; display: none; z-index: 9999; }
+
+        @media (max-width: 800px) {
+            nav.sidebar { display: none; }
+            main.main-content { margin-left: 0; padding-bottom: 70px; }
+            .mobile-nav { display: flex !important; }
+        }
+        .mobile-nav { display: none; position: fixed; bottom: 0; width: 100%; background: #000; border-top: 1px solid var(--border); justify-content: space-around; padding: 15px; z-index: 1000; }
     </style>
 </head>
 <body>
 
-<div class="app-shell">
-    <nav class="sidebar">
-        <div class="logo">NEXUS ✦</div>
-        <div class="nav-item active" onclick="showSection('feed')">🏠 Quantum Feed</div>
-        <div class="nav-item" onclick="showToast('Explore Mode Activated')">🚀 Discover</div>
-        <div class="nav-item" onclick="toggleChat()">⚡ Neural Chat</div>
-        <div class="nav-item" onclick="showToast('Identity Settings Loaded')">💎 Edit Workspace</div>
-    </nav>
+<nav class="sidebar">
+    <div class="logo">NEXUS ✦</div>
+    <div class="nav-link active" id="btn-home" onclick="navTo('home')">🏠 Home</div>
+    <div class="nav-link" id="btn-explore" onclick="navTo('explore')">🔍 Explore</div>
+    <div class="nav-link" id="btn-chat" onclick="navTo('chat')">💬 Neural Chat</div>
+    <div class="nav-link" id="btn-edit" onclick="openEdit()">👤 Edit Identity</div>
+    <div class="nav-link" onclick="toggleVision()" style="margin-top:auto">🌓 Switch Vision</div>
+</nav>
 
-    <main class="content">
-        <div class="feed-wrap">
-            <div class="story-bar" id="storyRow"></div>
-            
-            <div style="background: var(--surf); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px;">
-                <textarea id="postInp" placeholder="What's your current frequency, Anmol?" style="width:100%; background:transparent; border:none; color:white; outline:none; font-size:16px; resize:none;"></textarea>
-                <div style="display:flex; justify-content:space-between; margin-top:15px;">
-                    <span style="cursor:pointer;" onclick="showToast('Gallery Access Granted')">📸 Photo</span>
-                    <button onclick="publish()" style="background:var(--grad); color:white; border:none; padding:8px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">EMIT</button>
-                </div>
+<main class="main-content">
+    <div id="home-view" class="container">
+        <div class="story-bar" id="storyRow"></div>
+
+        <div style="background: #121212; padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+            <textarea id="pThought" placeholder="What's your current frequency, Anmol?" style="width:100%; background:transparent; border:none; color:white; font-size:18px; outline:none; resize:none;"></textarea>
+            <div style="display:flex; justify-content:space-between; margin-top:15px; pt:10px; border-top:1px solid #262626; padding-top:10px;">
+                <span style="cursor:pointer;" onclick="document.getElementById('hiddenFile').click()">📸 Add Photo</span>
+                <input type="file" id="hiddenFile" style="display:none" onchange="postImg(event)">
+                <button onclick="postText()" style="background:var(--accent); color:white; border:none; padding:6px 18px; border-radius:8px; font-weight:bold; cursor:pointer;">EMIT</button>
             </div>
-
-            <div id="feed"></div>
         </div>
-    </main>
+
+        <div id="feed"></div>
+    </div>
+
+    <div id="explore-view"></div>
+
+    <div id="chat-view">
+        <h2 style="margin-bottom:20px;">Neural Transmissions</h2>
+        <div id="chat-history" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; padding-bottom:20px;"></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="msgInp" placeholder="Type 'Good Morning'..." style="flex:1; padding:15px; border-radius:30px; background:#262626; border:none; color:#fff;">
+            <button onclick="sendMsg()" style="background:var(--accent); border:none; padding:15px 25px; border-radius:30px; color:#white; font-weight:bold; cursor:pointer;">➔</button>
+        </div>
+    </div>
+</main>
+
+<div class="mobile-nav">
+    <span onclick="navTo('home')">🏠</span>
+    <span onclick="navTo('explore')">🔍</span>
+    <span onclick="navTo('chat')">💬</span>
+    <span onclick="openEdit()">👤</span>
 </div>
 
-<div class="chat-panel" id="chatPanel">
-    <h3 style="margin-bottom:20px;">Messages</h3>
-    <div id="chatHistory" style="height: 80vh; overflow-y: auto;"></div>
-    <div style="display:flex; gap:10px;">
-        <input type="text" id="msgInp" placeholder="Send 'Good Morning'..." style="flex:1; padding:10px; border-radius:10px; background:var(--bg); border:1px solid var(--border); color:white;">
-        <button onclick="sendMsg()" style="background:var(--grad); border:none; padding:10px; border-radius:10px; color:white; cursor:pointer;">➔</button>
+<div class="viewer-overlay" id="sViewer" onclick="closeStory()">
+    <div class="story-box" onclick="event.stopPropagation()">
+        <div class="progress-cont"><div class="progress-fill" id="pFill"></div></div>
+        <div class="story-user-info">
+            <img id="vAvatar" src="">
+            <b id="vName"></b>
+        </div>
+        <img id="vImg" src="">
     </div>
 </div>
 
-<div id="toast"></div>
+<div id="edit-modal">
+    <div class="edit-card">
+        <h3>Edit Workspace</h3>
+        <input type="text" id="newName" placeholder="Enter New Name">
+        <button onclick="saveName()" style="width:100%; padding:12px; background:var(--accent); border:none; color:white; font-weight:bold; border-radius:8px; cursor:pointer;">Sync Identity</button>
+        <p onclick="closeEdit()" style="text-align:center; margin-top:15px; color:var(--muted); cursor:pointer;">Cancel</p>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
     const USERS = [
-        {id:0, name:"Anmol", city:"Mumbai, IN", avatar:"https://i.pravatar.cc/150?u=me", live:true},
-        {id:1, name:"Jessica", city:"New York, US", avatar:"https://i.pravatar.cc/150?u=1", live:true},
-        {id:2, name:"Swaraj", city:"Navi Mumbai, IN", avatar:"https://i.pravatar.cc/150?u=2", live:true},
-        {id:3, name:"Rahul", city:"Delhi, IN", avatar:"https://i.pravatar.cc/150?u=3", live:false},
-        {id:4, name:"Elena", city:"Paris, FR", avatar:"https://i.pravatar.cc/150?u=4", live:false},
-        {id:5, name:"Marcus", city:"Berlin, DE", avatar:"https://i.pravatar.cc/150?u=5", live:true}
+        { id: 0, name: "Anmol", avatar: "https://i.pravatar.cc/150?u=me", story: "https://picsum.photos/seed/s1/500/900", city: "Navi Mumbai" },
+        { id: 1, name: "Jessica", avatar: "https://i.pravatar.cc/150?u=1", story: "https://picsum.photos/seed/s2/500/900", city: "New York" },
+        { id: 2, name: "Swaraj", avatar: "https://i.pravatar.cc/150?u=2", story: "https://picsum.photos/seed/s3/500/900", city: "Mumbai" },
+        { id: 3, name: "Rahul", avatar: "https://i.pravatar.cc/150?u=3", story: "https://picsum.photos/seed/s4/500/900", city: "Delhi" },
+        { id: 4, name: "Elena", avatar: "https://i.pravatar.cc/150?u=4", story: "https://picsum.photos/seed/s5/500/900", city: "Paris" },
+        { id: 5, name: "Marcus", avatar: "https://i.pravatar.cc/150?u=5", story: "https://picsum.photos/seed/s6/500/900", city: "Berlin" },
+        { id: 6, name: "Arya", avatar: "https://i.pravatar.cc/150?u=6", story: "https://picsum.photos/seed/s7/500/900", city: "Winterfell" },
+        { id: 7, name: "Ashish", avatar: "https://i.pravatar.cc/150?u=7", story: "https://picsum.photos/seed/s8/500/900", city: "Pune" },
+        { id: 8, name: "Sumit", avatar: "https://i.pravatar.cc/150?u=8", story: "https://picsum.photos/seed/s9/500/900", city: "Bangalore" },
+        { id: 9, name: "Yash", avatar: "https://i.pravatar.cc/150?u=9", story: "https://picsum.photos/seed/s10/500/900", city: "Mumbai" }
     ];
 
     let POSTS = [
-        {id:1, uId:2, img:"https://picsum.photos/seed/swaraj/800/800", txt:"Neural Networks are the future of connectivity. 🧠", likes:124, liked:false, comments:[]},
-        {id:2, uId:5, img:"https://picsum.photos/seed/marcus/800/800", txt:"Architecture redefined in the digital age. 🏛️", likes:89, liked:false, comments:[]},
-        {id:3, uId:1, img:"https://picsum.photos/seed/nyc/800/800", txt:"Times Square magic! 🗽", likes:450, liked:false, comments:[]},
-        {id:4, uId:4, img:"https://picsum.photos/seed/paris/800/800", txt:"Parisian mornings... ☕", likes:312, liked:false, comments:[]}
+        { id: 101, uId: 2, img: "https://picsum.photos/seed/p1/600/600", text: "Neural Networks are the future. 🧠", liked: false, comments: [] },
+        { id: 102, uId: 5, img: "https://picsum.photos/seed/p2/600/600", text: "Architecture vibes today. 🏛️", liked: false, comments: [] },
+        { id: 103, uId: 0, img: "https://picsum.photos/seed/p3/600/600", text: "Designing Nexus Ultra! ⚡", liked: false, comments: [] }
     ];
 
+    let storyTick;
+
     function render() {
-        document.getElementById('storyRow').innerHTML = USERS.map(u => `
-            <div class="story">
-                <div class="ring"><img src="${u.avatar}">${u.live?'<span class="live-badge">LIVE</span>':''}</div>
-                <small style="font-size:11px;">${u.name}</small>
+        // Story Rendering
+        const sBar = document.getElementById('storyRow');
+        sBar.innerHTML = USERS.map(u => `
+            <div class="story-item" onclick="viewStory(${u.id})">
+                <div class="ring" id="ring-${u.id}"><img src="${u.avatar}"></div>
+                <small>${u.name}</small>
             </div>
         `).join('');
 
-        document.getElementById('feed').innerHTML = POSTS.map(p => {
+        // Feed Rendering
+        const feed = document.getElementById('feed');
+        feed.innerHTML = POSTS.map(p => {
             const u = USERS.find(x => x.id === p.uId);
             return `
                 <div class="post">
                     <div class="post-header">
-                        <img src="${u.avatar}">
-                        <div class="post-info"><b>${u.name}</b><span>${u.city}</span></div>
-                    </div>
-                    <img src="${p.img}" class="post-img" ondblclick="like(${p.id})">
-                    <div class="post-actions">
-                        <span onclick="like(${p.id})">${p.liked?'❤️':'🤍'}</span>
-                        <span onclick="toggleComments(${p.id})">💬</span>
-                        <span onclick="sharePost('${p.txt}')">✈️</span>
-                        <span style="margin-left:auto" onclick="savePost(${p.id})">📑</span>
-                    </div>
-                    <div style="padding:0 15px 10px;"><b>${u.name}</b> ${p.txt}</div>
-                    <div class="comment-box" id="cb-${p.id}">
-                        <div class="comment-list" id="cl-${p.id}">${p.comments.map(c => `<div><b>You:</b> ${c}</div>`).join('')}</div>
-                        <div class="comment-input-area">
-                            <input type="text" id="ci-${p.id}" placeholder="Good or something like that...">
-                            <button onclick="addComment(${p.id})" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">Post</button>
+                        <div class="user-meta">
+                            <img src="${u.avatar}">
+                            <div><b>${u.name}</b><br><small style="color:var(--muted)">${u.city}</small></div>
                         </div>
+                        <span>•••</span>
+                    </div>
+                    <div class="post-media" ondblclick="likePost(${p.id})"><img src="${p.img}"></div>
+                    <div class="post-actions">
+                        <span onclick="likePost(${p.id})">${p.liked?'❤️':'🤍'}</span>
+                        <span onclick="toggleC(${p.id})">💬</span>
+                        <span onclick="nativeShare('${p.text}')">✈️</span>
+                        <span style="margin-left:auto" onclick="toast('Saved to Workspace')">📑</span>
+                    </div>
+                    <div><b>${u.name}</b> ${p.text}</div>
+                    <div class="comment-area" id="carea-${p.id}">
+                        <div id="clist-${p.id}" style="font-size:13px; margin-bottom:10px;">${p.comments.map(c => `<div><b>You:</b> ${c}</div>`).join('')}</div>
+                        <input type="text" class="comment-input" placeholder="Add a comment..." onkeydown="addC(event, ${p.id})">
                     </div>
                 </div>
             `;
         }).join('');
     }
 
-    function like(id) {
-        const p = POSTS.find(x => x.id === id);
-        p.liked = !p.liked;
-        showToast(p.liked ? 'Neural Pulse ❤️' : 'Pulse Removed');
-        render();
+    function viewStory(id) {
+        const u = USERS[id];
+        const overlay = document.getElementById('sViewer');
+        const fill = document.getElementById('pFill');
+        document.getElementById('vImg').src = u.story;
+        document.getElementById('vAvatar').src = u.avatar;
+        document.getElementById('vName').innerText = u.name;
+        document.getElementById(`ring-${id}`).classList.add('seen');
+        overlay.classList.add('active');
+
+        let w = 0;
+        clearInterval(storyTick);
+        storyTick = setInterval(() => {
+            w++;
+            fill.style.width = w + '%';
+            if(w >= 100) closeStory();
+        }, 40);
     }
 
-    function toggleComments(id) {
-        const box = document.getElementById(`cb-${id}`);
-        box.classList.toggle('active');
+    function closeStory() {
+        document.getElementById('sViewer').classList.remove('active');
+        clearInterval(storyTick);
     }
 
-    function addComment(id) {
-        const input = document.getElementById(`ci-${id}`);
-        if(!input.value) return;
-        const p = POSTS.find(x => x.id === id);
-        p.comments.push(input.value);
-        input.value = '';
-        render();
-        showToast('Comment Emitted ⚡');
-    }
-
-    function sharePost(txt) {
-        if (navigator.share) {
-            navigator.share({ title: 'Nexus Social', text: txt, url: window.location.href });
-        } else {
-            window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
+    function navTo(target) {
+        const views = ['home-view', 'explore-view', 'chat-view'];
+        views.forEach(v => document.getElementById(v).style.display = 'none');
+        document.getElementById(target + '-view').style.display = target === 'explore' ? 'grid' : 'flex';
+        
+        if(target === 'explore') {
+            document.getElementById('explore-view').innerHTML = Array.from({length:21}).map((_, i) => 
+                `<img src="https://picsum.photos/seed/ex${i}/400/400" onclick="toast('Discovery Post #${i+1}')">`
+            ).join('');
         }
+        if(target === 'chat') renderChat();
     }
 
-    function savePost(id) {
-        showToast('Post Saved to Collective 📑');
-    }
-
-    function publish() {
-        const val = document.getElementById('postInp').value;
-        if(!val) return;
-        POSTS.unshift({id:Date.now(), uId:0, img:"https://picsum.photos/seed/"+Math.random()+"/800/800", txt:val, liked:false, comments:[]});
-        document.getElementById('postInp').value = '';
-        render();
-        showToast('Quantum Emission Success ⚡');
-    }
-
-    // --- Chat Logic ---
-    const chatHistory = [
-        {name: "Jessica", msg: "Hey Anmol, how are you?"},
-        {name: "Swaraj", msg: "Good Morning! Did you check the new design?"}
+    // Chat Logic
+    let messages = [
+        { name: "Jessica", msg: "Anmol! How are you?" },
+        { name: "Swaraj", msg: "Good Morning bro! Did you check the new Nexus code?" }
     ];
 
-    function toggleChat() { document.getElementById('chatPanel').classList.toggle('open'); renderChat(); }
-
     function renderChat() {
-        document.getElementById('chatHistory').innerHTML = chatHistory.map(c => `
-            <div class="chat-bubble ${c.name === 'You' ? 'my-chat' : ''}">
-                <b>${c.name}</b><br>${c.msg}
+        const hist = document.getElementById('chat-history');
+        hist.innerHTML = messages.map(m => `
+            <div class="message-bubble ${m.name === 'You' ? 'me' : ''}">
+                <b>${m.name}</b><br>${m.msg}
             </div>
         `).join('');
+        hist.scrollTop = hist.scrollHeight;
     }
 
     function sendMsg() {
         const inp = document.getElementById('msgInp');
         if(!inp.value) return;
-        chatHistory.push({name: "You", msg: inp.value});
-        const reply = inp.value;
+        messages.push({ name: "You", msg: inp.value });
+        const val = inp.value;
         inp.value = '';
         renderChat();
-        if(reply.toLowerCase().includes('morning')) {
+        
+        if(val.toLowerCase().includes("morning")) {
             setTimeout(() => {
-                chatHistory.push({name: "Jessica", msg: "Good Morning! Have a great day ahead! ✨"});
+                messages.push({ name: "Jessica", msg: "Good Morning! Wishing you a productive day ahead! 🚀" });
                 renderChat();
             }, 1000);
         }
     }
 
-    function showToast(m) { const t = document.getElementById('toast'); t.innerHTML = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
+    function likePost(id) {
+        const p = POSTS.find(x => x.id === id);
+        p.liked = !p.liked;
+        render();
+    }
+
+    function toggleC(id) { document.getElementById('carea-'+id).classList.toggle('active'); }
+    
+    function addC(e, id) {
+        if(e.key === 'Enter' && e.target.value) {
+            const p = POSTS.find(x => x.id === id);
+            p.comments.push(e.target.value);
+            e.target.value = '';
+            render();
+        }
+    }
+
+    function postText() {
+        const t = document.getElementById('pThought');
+        if(!t.value) return;
+        POSTS.unshift({ id: Date.now(), uId: 0, img: "https://picsum.photos/seed/"+Math.random()+"/600/600", text: t.value, liked: false, comments: [] });
+        t.value = ''; render(); toast("Transmission Success ⚡");
+    }
+
+    function postImg(e) {
+        const file = e.target.files[0];
+        const url = URL.createObjectURL(file);
+        POSTS.unshift({ id: Date.now(), uId: 0, img: url, text: "New Upload! 📸", liked: false, comments: [] });
+        render(); toast("Photo Emitted ⚡");
+    }
+
+    function nativeShare(txt) {
+        if(navigator.share) navigator.share({ title: 'Nexus Social', text: txt, url: window.location.href });
+        else toast("Share link copied to clipboard!");
+    }
+
+    function openEdit() { document.getElementById('edit-modal').style.display = 'flex'; }
+    function closeEdit() { document.getElementById('edit-modal').style.display = 'none'; }
+    function saveName() { USERS[0].name = document.getElementById('newName').value || "Anmol"; closeEdit(); render(); toast("Identity Synced"); }
+    function toast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
 
     render();
 </script>
