@@ -461,14 +461,326 @@ let POSTS = [
   },
 ];
 
-// ... (Rest of the functions like renderPosts, toggleLike, etc. follow here)
-  // Global State
-let currentProfileId = null;
-let currentStoryIdx = 0;
-let storyTimer = null;
+// ===== CORE APP STATE =====
 let nextPostId = 100;
+let currentProfileId = null;
 
-// ===== INITIALIZE APP =====
+// ===== POST RENDERING ENGINE =====
+function renderPosts() {
+  const container = document.getElementById('posts-container');
+  container.innerHTML = '';
+  POSTS.forEach(post => {
+    container.appendChild(createPostEl(post));
+  });
+}
+
+function createPostEl(post) {
+  const user = USERS[post.userId];
+  const el = document.createElement('div');
+  el.className = 'post';
+  el.id = `post-${post.id}`;
+
+  const imgHTML = post.image ? `<img class="post-image" src="${post.image}" onclick="window.open(this.src)" />` : '';
+  const likedClass = post.liked ? 'liked' : '';
+  const bookmarkedClass = post.bookmarked ? 'bookmarked' : '';
+
+  el.innerHTML = `
+    <div class="post-header">
+      <img class="post-avatar" src="${user.avatar}" onclick="openProfile(${user.id})" />
+      <div class="post-meta">
+        <div class="post-name" onclick="openProfile(${user.id})">${user.name}</div>
+        <div class="post-handle">${user.handle} · ${post.time}</div>
+      </div>
+    </div>
+    <div class="post-body">${post.text}</div>
+    ${imgHTML}
+    <div class="post-actions">
+      <button class="action-btn ${likedClass}" onclick="toggleLike(${post.id})">
+        <span class="icon">${post.liked ? '❤️' : '🤍'}</span> <span>${post.likes}</span>
+      </button>
+      <button class="action-btn" onclick="toggleComments(${post.id})">💬 ${post.comments.length}</button>
+      <button class="action-btn ${bookmarkedClass}" onclick="toggleBookmark(${post.id})">🔖</button>
+    </div>
+    <div class="comments-section" id="comments-${post.id}">
+      <div id="comment-list-${post.id}">
+        ${post.comments.map(c => `<div class="comment-item"><b>${USERS[c.userId].name}:</b> ${c.text}</div>`).join('')}
+      </div>
+      <div class="comment-input-row">
+        <input class="comment-input" id="ci-${post.id}" placeholder="Reply..." onkeydown="if(event.key==='Enter')submitComment(${post.id})">
+      </div>
+    </div>`;
+  return el;
+}
+
+// ===== INTERACTION FUNCTIONS =====
+function toggleLike(postId) {
+  const post = POSTS.find(p => p.id === postId);
+  post.liked = !post.liked;
+  post.likes += post.liked ? 1 : -1;
+  renderPosts();
+  if(post.liked) toast('❤️', 'Added to liked posts');
+}
+
+function toggleBookmark(postId) {
+  const post = POSTS.find(p => p.id === postId);
+  post.bookmarked = !post.bookmarked;
+  renderPosts();
+  toast('🔖', post.bookmarked ? 'Saved to bookmarks' : 'Removed from bookmarks');
+}
+
+function toggleComments(postId) {
+  const section = document.getElementById(`comments-${postId}`);
+  section.style.display = section.style.display === 'block' ? 'none' : 'block';
+}
+
+function submitComment(postId) {
+  const input = document.getElementById(`ci-${postId}`);
+  if (!input.value.trim()) return;
+  const post = POSTS.find(p => p.id === postId);
+  post.comments.push({ userId: 0, text: input.value });
+  renderPosts();
+  toggleComments(postId);
+  toast('💬', 'Comment added!');
+}
+
+function publishPost() {
+  const ta = document.getElementById('compose-text');
+  if (!ta.value.trim()) return;
+  const newPost = {
+    id: nextPostId++, userId: 0, text: ta.value, image: null,
+    likes: 0, liked: false, comments: [], bookmarked: false, time: 'Just now'
+  };
+  POSTS.unshift(newPost);
+  renderPosts();
+  ta.value = '';
+  document.getElementById('post-btn').disabled = true;
+  toast('🚀', 'Post is live!');
+        }
+  // ===== STORY SYSTEM =====
+let storyTabMode = 'upload';
+let storyImageDataURL = null;
+let storyTextBg = 'linear-gradient(135deg,#7c6dfa,#fa6d9a)';
+
+function renderStories() {
+  const row = document.getElementById('stories-row');
+  row.innerHTML = `
+    <div class="story-card story-add" onclick="openAddStory()">
+      <div class="story-ring"><div class="story-ring-inner">＋</div></div>
+      <div class="story-name">Add Story</div>
+    </div>`;
+  
+  STORIES.forEach((s, i) => {
+    const u = USERS[s.userId];
+    const card = document.createElement('div');
+    card.className = 'story-card';
+    card.innerHTML = `
+      <div class="story-ring ${s.seen ? 'seen' : ''}">
+        <img class="story-inner" src="${u.avatar}" />
+      </div>
+      <div class="story-name">${u.name.split(' ')[0]}</div>`;
+    card.onclick = () => openStory(i);
+    row.appendChild(card);
+  });
+}
+
+function openAddStory() {
+  document.getElementById('add-story-modal').classList.add('open');
+  switchStoryTab('upload');
+}
+
+function closeAddStory() {
+  document.getElementById('add-story-modal').classList.remove('open');
+}
+
+function switchStoryTab(tab) {
+  storyTabMode = tab;
+  document.querySelectorAll('.as-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById('as-panel-upload').style.display = tab === 'upload' ? 'block' : 'none';
+  document.getElementById('as-panel-url').style.display = tab === 'url' ? 'block' : 'none';
+  document.getElementById('as-panel-text').style.display = tab === 'text' ? 'block' : 'none';
+}
+
+function handleStoryFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    storyImageDataURL = ev.target.result;
+    document.getElementById('as-preview-upload').innerHTML = `<img src="${storyImageDataURL}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+    document.getElementById('as-submit-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitStory() {
+  const caption = document.getElementById('as-caption').value;
+  let img = storyImageDataURL;
+  if (storyTabMode === 'url') img = document.getElementById('as-url-input').value;
+  
+  STORIES.unshift({ userId: 0, img: img, caption: caption || 'My Vibe', seen: false });
+  renderStories();
+  closeAddStory();
+  toast('✨', 'Story shared successfully!');
+}
+
+// ===== STORY VIEWER LOGIC =====
+function openStory(idx) {
+  currentStoryIdx = idx;
+  const s = STORIES[idx];
+  const u = USERS[s.userId];
+  document.getElementById('sv-avatar').src = u.avatar;
+  document.getElementById('sv-name').textContent = u.name;
+  document.getElementById('sv-img').src = s.img;
+  document.getElementById('sv-caption').textContent = s.caption;
+  document.getElementById('story-viewer').classList.add('open');
+  startStoryTimer();
+}
+
+function startStoryTimer() {
+  clearInterval(storyTimer);
+  let pct = 0;
+  const progress = document.getElementById('story-progress');
+  progress.innerHTML = '<div class="story-prog-bar"><div id="story-fill" class="story-prog-fill"></div></div>';
+  const fill = document.getElementById('story-fill');
+  
+  storyTimer = setInterval(() => {
+    pct += 1;
+    fill.style.width = pct + '%';
+    if (pct >= 100) {
+      clearInterval(storyTimer);
+      closeStory();
+    }
+  }, 50);
+}
+
+function closeStory() {
+  clearInterval(storyTimer);
+  document.getElementById('story-viewer').classList.remove('open');
+}
+
+// ===== THEME & UTILS =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+  toast(next === 'dark' ? '🌙' : '☀️', `Switched to ${next} mode`);
+}
+
+function toast(icon, msg) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => { el.classList.add('hide'); setTimeout(() => el.remove(), 300); }, 3000);
+}
+  // ===== PROFILE MODAL LOGIC =====
+function openProfile(userId) {
+  const user = USERS[userId];
+  if (!user) return;
+  currentProfileId = userId;
+
+  document.getElementById('modal-avatar').src = user.avatar;
+  document.getElementById('modal-name').innerHTML = user.name + (user.verified ? ' <span class="verified">✓</span>' : '');
+  document.getElementById('modal-handle').textContent = user.handle;
+  document.getElementById('modal-bio').textContent = user.bio;
+  document.getElementById('modal-posts').textContent = POSTS.filter(p => p.userId === userId).length;
+  document.getElementById('modal-followers').textContent = fmtNum(user.followers);
+  document.getElementById('modal-following').textContent = fmtNum(user.following);
+
+  const mfb = document.getElementById('modal-follow-btn');
+  if (user.isMe) {
+    mfb.textContent = 'Edit Profile';
+    mfb.onclick = () => { editProfilePrompt(); };
+    mfb.classList.remove('following');
+  } else {
+    mfb.textContent = user.followed ? 'Following ✓' : 'Follow';
+    mfb.classList.toggle('following', user.followed);
+    mfb.onclick = () => toggleFollow(userId);
+  }
+  document.getElementById('profile-modal').classList.add('open');
+}
+
+function editProfilePrompt() {
+  const newBio = prompt("Enter your new bio:", USERS[0].bio);
+  if (newBio !== null) {
+    USERS[0].bio = newBio;
+    toast('✏️', 'Bio updated!');
+    openProfile(0); // Refresh view
+  }
+}
+
+function toggleFollow(userId) {
+  const user = USERS[userId];
+  user.followed = !user.followed;
+  user.followers += user.followed ? 1 : -1;
+  toast(user.followed ? '✅' : '👋', user.followed ? `Following ${user.name}` : `Unfollowed`);
+  openProfile(userId);
+  renderSidebar(); // Update suggested list
+}
+
+// ===== SEARCH ENGINE =====
+function initSearch() {
+  const input = document.getElementById('search-input');
+  const dropdown = document.getElementById('search-dropdown');
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { dropdown.classList.remove('open'); return; }
+
+    const results = USERS.filter(u => 
+      u.name.toLowerCase().includes(q) || u.handle.toLowerCase().includes(q)
+    );
+
+    dropdown.innerHTML = results.map(u => `
+      <div class="search-result-item" onclick="openProfile(${u.id}); document.getElementById('search-input').value='';">
+        <img src="${u.avatar}" />
+        <div><div class="name">${u.name}</div><div class="handle">${u.handle}</div></div>
+      </div>`).join('');
+    dropdown.classList.add(results.length ? 'open' : 'remove');
+  });
+}
+
+// ===== SIDEBAR & TRENDING =====
+function renderSidebar() {
+  const container = document.getElementById('sidebar-suggestions');
+  if (!container) return;
+  container.innerHTML = USERS.filter(u => !u.isMe).slice(0, 3).map(u => `
+    <div class="suggested-user">
+      <img src="${u.avatar}" onclick="openProfile(${u.id})" />
+      <div class="info">
+        <div class="name">${u.name}</div>
+        <div class="handle">${u.handle}</div>
+      </div>
+      <button class="follow-btn ${u.followed ? 'following' : ''}" onclick="toggleFollow(${u.id})">
+        ${u.followed ? 'Following' : 'Follow'}
+      </button>
+    </div>`).join('');
+}
+
+function renderRightPanel() {
+  const tl = document.getElementById('trending-list');
+  if (!tl) return;
+  tl.innerHTML = TRENDING.map(t => `
+    <div class="trend-item" onclick="toast('🔍', 'Searching ${t.tag}...')">
+      <div class="trend-tag">${t.tag}</div>
+      <div class="trend-count">${t.count}</div>
+    </div>`).join('');
+}
+
+// ===== UTILS & STARTUP =====
+function fmtNum(n) { return n >= 1000 ? (n/1000).toFixed(1) + 'K' : n; }
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function initComposer() {
+  const ta = document.getElementById('compose-text');
+  const btn = document.getElementById('post-btn');
+  ta.addEventListener('input', () => btn.disabled = !ta.value.trim());
+}
+
+// THE FINAL INITIALIZATION
 function init() {
   setAvatars();
   renderStories();
@@ -479,105 +791,7 @@ function init() {
   initComposer();
 }
 
-function setAvatars() {
-  const me = USERS[0];
-  document.getElementById('nav-avatar').src = me.avatar;
-  document.getElementById('composer-avatar').src = me.avatar;
-}
-
-// ===== POSTS LOGIC =====
-function renderPosts() {
-  const container = document.getElementById('posts-container');
-  container.innerHTML = '';
-  POSTS.forEach(post => {
-    const user = USERS[post.userId];
-    const el = document.createElement('div');
-    el.className = 'post';
-    el.innerHTML = `
-      <div class="post-header">
-        <img class="post-avatar" src="${user.avatar}" onclick="openProfile(${user.id})" />
-        <div class="post-meta">
-          <div class="post-name" onclick="openProfile(${user.id})">${user.name}</div>
-          <div class="post-handle">${user.handle} · ${post.time}</div>
-        </div>
-      </div>
-      <div class="post-body">${post.text}</div>
-      ${post.image ? `<img class="post-image" src="${post.image}" />` : ''}
-      <div class="post-actions">
-        <button class="action-btn" onclick="toggleLike(${post.id})">❤️ ${post.likes}</button>
-        <button class="action-btn">💬 ${post.comments.length}</button>
-        <button class="action-btn" onclick="toast('🔗', 'Link copied!')">↗️</button>
-      </div>`;
-    container.appendChild(el);
-  });
-}
-
-function publishPost() {
-  const ta = document.getElementById('compose-text');
-  const text = ta.value.trim();
-  if (!text) return;
-
-  const newPost = {
-    id: nextPostId++, userId: 0, text: text, image: null,
-    likes: 0, liked: false, comments: [], time: 'Just now'
-  };
-
-  POSTS.unshift(newPost);
-  renderPosts();
-  ta.value = '';
-  document.getElementById('post-btn').disabled = true;
-  toast('🚀', 'Post published!');
-}
-  function toggleLike(postId) {
-  const post = POSTS.find(p => p.id === postId);
-  post.liked = !post.liked;
-  post.likes += post.liked ? 1 : -1;
-  renderPosts();
-  if(post.liked) toast('❤️', 'You liked this!');
-}
-
-function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  document.getElementById('theme-btn').textContent = isDark ? '☀️' : '🌙';
-}
-
-function toast(icon, msg) {
-  const container = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
-  container.appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
-
-function openProfile(id) {
-  const u = USERS[id];
-  document.getElementById('modal-name').textContent = u.name;
-  document.getElementById('modal-handle').textContent = u.handle;
-  document.getElementById('modal-bio').textContent = u.bio;
-  document.getElementById('modal-avatar').src = u.avatar;
-  document.getElementById('profile-modal').classList.add('open');
-}
-
-function closeProfile() {
-  document.getElementById('profile-modal').classList.remove('open');
-}
-
-function initComposer() {
-  const ta = document.getElementById('compose-text');
-  const btn = document.getElementById('post-btn');
-  ta.addEventListener('input', () => btn.disabled = !ta.value.trim());
-}
-
-// Final setup functions (empty placeholders to prevent errors)
-function renderStories() {} 
-function renderSidebar() {} 
-function renderRightPanel() {}
-function initSearch() {}
-
-// Start the app
+// Run the app!
 init();
 </script>
 </body>
