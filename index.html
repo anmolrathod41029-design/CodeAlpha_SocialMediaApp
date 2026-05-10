@@ -3,248 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Social ✦ Nexus Edition</title>
+    <title>Nexus ✦ Infinite Edition</title>
     <style>
         :root {
-            --bg: #0f172a; --surf: #1e293b; --text: #f8fafc; --muted: #94a3b8;
-            --accent: #38bdf8; --border: rgba(255,255,255,0.1);
-            --grad: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%);
-            --glass: rgba(30, 41, 59, 0.7);
+            --bg: #0b0e14; --surf: #161b22; --text: #f0f6fc; --muted: #8b949e;
+            --accent: #58a6ff; --border: #30363d;
+            --grad: linear-gradient(135deg, #1d4ed8 0%, #7e22ce 100%);
+            --glass: rgba(22, 27, 34, 0.8);
         }
-        [data-theme="light"] {
-            --bg: #f1f5f9; --surf: #ffffff; --text: #0f172a; --muted: #64748b; --border: rgba(0,0,0,0.05); --glass: rgba(255,255,255,0.8);
-        }
-        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', -apple-system, sans-serif; }
-        body { background: var(--bg); color: var(--text); transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; height: 100vh; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
 
-        /* Cinematic Background */
-        .glow { position: fixed; width: 400px; height: 400px; background: var(--accent); filter: blur(150px); opacity: 0.15; z-index: -1; border-radius: 50%; top: -100px; right: -100px; }
+        /* Layout */
+        .app-shell { display: flex; height: 100vh; }
+        
+        /* Sidebar */
+        nav.sidebar { width: 260px; border-right: 1px solid var(--border); padding: 30px 20px; display: flex; flex-direction: column; background: var(--surf); }
+        .logo { font-size: 24px; font-weight: 800; margin-bottom: 40px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; cursor: pointer; color: var(--muted); transition: 0.3s; margin-bottom: 5px; }
+        .nav-item:hover, .nav-item.active { background: var(--border); color: var(--text); }
+        .nav-item.active { background: var(--grad); color: white; }
 
-        /* High-End Sidebar */
-        nav.nexus-side { width: 280px; height: 100vh; background: var(--glass); backdrop-filter: blur(20px); border-right: 1px solid var(--border); padding: 40px 30px; display: flex; flex-direction: column; position: fixed; left: 0; z-index: 1000; }
-        .logo-box { font-size: 28px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 50px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px; }
-        .logo-box::before { content: ''; width: 12px; height: 12px; background: var(--grad); border-radius: 3px; display: inline-block; animation: pulse 2s infinite; }
+        /* Main Scroll Area */
+        main.content { flex: 1; overflow-y: auto; padding: 30px; scrollbar-width: none; }
+        .feed-wrap { max-width: 600px; margin: 0 auto; }
 
-        .nav-btn { display: flex; align-items: center; gap: 15px; padding: 16px; border-radius: 14px; cursor: pointer; transition: 0.3s; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
-        .nav-btn:hover { background: rgba(56, 189, 248, 0.1); color: var(--accent); transform: scale(1.05); }
-        .nav-btn.active { background: var(--grad); color: white; box-shadow: 0 10px 20px -5px rgba(14, 165, 233, 0.4); }
+        /* Stories */
+        .story-bar { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 25px; border-bottom: 1px solid var(--border); margin-bottom: 25px; scrollbar-width: none; }
+        .story { min-width: 75px; text-align: center; cursor: pointer; }
+        .ring { width: 66px; height: 66px; border-radius: 22px; padding: 2px; background: var(--grad); margin: 0 auto 8px; position: relative; }
+        .ring img { width: 100%; height: 100%; border-radius: 20px; border: 3px solid var(--surf); object-fit: cover; }
+        .live-badge { position: absolute; top: -5px; right: -5px; background: #ff3e3e; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
 
-        /* Main Viewport */
-        .viewport { margin-left: 280px; height: 100vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 400px; scroll-behavior: smooth; }
-        .feed-engine { padding: 40px; max-width: 750px; width: 100%; margin: 0 auto; }
+        /* Post Card */
+        .post { background: var(--surf); border: 1px solid var(--border); border-radius: 20px; margin-bottom: 30px; overflow: hidden; }
+        .post-header { padding: 15px; display: flex; align-items: center; gap: 12px; }
+        .post-header img { width: 38px; height: 38px; border-radius: 12px; object-fit: cover; }
+        .post-info b { display: block; font-size: 14px; }
+        .post-info span { font-size: 11px; color: var(--muted); }
+        .post-img { width: 100%; max-height: 550px; object-fit: cover; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: crosshair; }
+        .post-actions { padding: 15px; display: flex; gap: 20px; font-size: 22px; }
+        .post-actions span { cursor: pointer; transition: 0.2s; }
+        .post-actions span:hover { transform: scale(1.2); }
+        
+        /* Comment System */
+        .comment-box { padding: 0 15px 15px; display: none; border-top: 1px solid var(--border); pt: 10px; }
+        .comment-box.active { display: block; }
+        .comment-list { max-height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 13px; }
+        .comment-input-area { display: flex; gap: 10px; }
+        .comment-input-area input { flex: 1; background: var(--bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; color: white; outline: none; }
 
-        /* Futuristic Story Bar */
-        .story-nexus { display: flex; gap: 20px; overflow-x: auto; padding: 10px 0 30px; scrollbar-width: none; }
-        .story-node { text-align: center; cursor: pointer; min-width: 85px; position: relative; }
-        .ring-3d { width: 80px; height: 80px; border-radius: 28px; padding: 3px; background: var(--grad); transition: 0.4s; position: relative; }
-        .ring-3d:hover { transform: rotate(10deg) scale(1.1); }
-        .ring-3d img { width: 100%; height: 100%; border-radius: 25px; border: 4px solid var(--bg); object-fit: cover; }
-        .story-node b { font-size: 12px; margin-top: 10px; display: block; opacity: 0.8; }
-        .live-tag { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800; border: 2px solid var(--bg); }
+        /* Messages Panel */
+        .chat-panel { position: fixed; right: -400px; top: 0; width: 350px; height: 100vh; background: var(--surf); border-left: 1px solid var(--border); transition: 0.4s; z-index: 2000; padding: 25px; }
+        .chat-panel.open { right: 0; }
+        .chat-bubble { background: var(--bg); padding: 10px 15px; border-radius: 15px; margin-bottom: 15px; font-size: 14px; border-left: 3px solid var(--accent); }
+        .my-chat { background: var(--grad); color: white; text-align: right; border-left: none; border-right: 3px solid white; }
 
-        /* The Quantum Composer */
-        .composer-card { background: var(--glass); backdrop-filter: blur(20px); border-radius: 24px; padding: 25px; border: 1px solid var(--border); margin-bottom: 40px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2); }
-        .thought-input { width: 100%; background: transparent; border: none; font-size: 1.2rem; color: var(--text); outline: none; margin-bottom: 20px; resize: none; }
-        .actions-bar { display: flex; justify-content: space-between; border-top: 1px solid var(--border); pt: 20px; margin-top: 10px; padding-top: 15px; }
-
-        /* Dynamic Posts */
-        .quantum-post { background: var(--glass); border-radius: 30px; border: 1px solid var(--border); margin-bottom: 40px; overflow: hidden; transition: 0.3s; }
-        .quantum-post:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .post-media { width: 100%; height: 500px; object-fit: cover; border-radius: 0 0 30px 30px; cursor: pointer; }
-        .interaction-panel { padding: 25px; display: flex; gap: 25px; font-size: 26px; }
-
-        /* Analytics Sidebar */
-        .analytics { padding: 40px; border-left: 1px solid var(--border); background: var(--glass); backdrop-filter: blur(30px); position: sticky; top: 0; }
-        .stat-card { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .pulse { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; display: inline-block; margin-right: 10px; box-shadow: 0 0 10px #22c55e; }
-
-        /* Interactive Modals */
-        .overlay { position: fixed; inset:0; background: rgba(0,0,0,0.95); z-index: 9999; display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
-        .overlay.active { display: flex; }
-        .viewer-box { width: 420px; height: 85vh; position: relative; border-radius: 30px; overflow: hidden; box-shadow: 0 0 100px rgba(56, 189, 248, 0.3); }
-        .p-track { position: absolute; top: 20px; left: 15px; right: 15px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
-        .p-bar { height: 100%; background: #fff; width: 0%; box-shadow: 0 0 10px #fff; }
-
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-        @media (max-width: 1200px) { .analytics { display: none; } .viewport { grid-template-columns: 1fr; } }
+        /* Toast */
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--grad); color: white; padding: 12px 25px; border-radius: 50px; display: none; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     </style>
 </head>
-<body data-theme="dark">
-    <div class="glow"></div>
-    <div class="glow" style="bottom:-100px; left:-100px; background:#a855f7;"></div>
+<body>
 
-    <nav class="nexus-side">
-        <div class="logo-box">NEXUS</div>
-        <div class="nav-btn active" onclick="location.reload()"><span>🏠</span> Quantum Feed</div>
-        <div class="nav-btn" onclick="openExplore()"><span>🚀</span> Discover</div>
-        <div class="nav-btn" onclick="msgLive()"><span>⚡</span> Neural Chat</div>
-        <div class="nav-btn" onclick="openSettings()"><span>💎</span> Edit Workspace</div>
-        <div class="nav-btn" onclick="toggleTheme()" style="margin-top: auto;"><span>🌓</span> Switch Vision</div>
+<div class="app-shell">
+    <nav class="sidebar">
+        <div class="logo">NEXUS ✦</div>
+        <div class="nav-item active" onclick="showSection('feed')">🏠 Quantum Feed</div>
+        <div class="nav-item" onclick="showToast('Explore Mode Activated')">🚀 Discover</div>
+        <div class="nav-item" onclick="toggleChat()">⚡ Neural Chat</div>
+        <div class="nav-item" onclick="showToast('Identity Settings Loaded')">💎 Edit Workspace</div>
     </nav>
 
-    <div class="viewport">
-        <main class="feed-engine">
-            <div class="story-nexus" id="storyNexus"></div>
-
-            <div class="composer-card">
-                <textarea id="mainInp" class="thought-input" placeholder="What's your current frequency, Anmol?"></textarea>
-                <div class="actions-bar">
-                    <div style="display:flex; gap:15px;">
-                        <span style="cursor:pointer;" onclick="document.getElementById('hiddenFile').click()">📸 Photo</span>
-                        <input type="file" id="hiddenFile" style="display:none" onchange="postDynamic(event)">
-                        <span style="cursor:pointer;" onclick="msgLive()">🎙️ Voice</span>
-                    </div>
-                    <button onclick="postDynamic()" style="background:var(--grad); color:white; border:none; padding:8px 25px; border-radius:12px; font-weight:800; cursor:pointer;">EMIT</button>
+    <main class="content">
+        <div class="feed-wrap">
+            <div class="story-bar" id="storyRow"></div>
+            
+            <div style="background: var(--surf); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px;">
+                <textarea id="postInp" placeholder="What's your current frequency, Anmol?" style="width:100%; background:transparent; border:none; color:white; outline:none; font-size:16px; resize:none;"></textarea>
+                <div style="display:flex; justify-content:space-between; margin-top:15px;">
+                    <span style="cursor:pointer;" onclick="showToast('Gallery Access Granted')">📸 Photo</span>
+                    <button onclick="publish()" style="background:var(--grad); color:white; border:none; padding:8px 20px; border-radius:10px; cursor:pointer; font-weight:bold;">EMIT</button>
                 </div>
             </div>
 
-            <div id="quantumFeed"></div>
-        </main>
-
-        <aside class="analytics">
-            <h3 style="margin-bottom:20px;">System Analytics</h3>
-            <div class="stat-card">
-                <small style="color:var(--muted)">LIVE TRAFFIC</small>
-                <div style="font-size:24px; font-weight:800;"><span class="pulse"></span> 1,204 Active</div>
-            </div>
-            <div class="stat-card">
-                <small style="color:var(--muted)">DATA ANALYTICS</small>
-                <div style="font-size:18px; color:var(--accent);">⚡ Processing Vibe 8.2...</div>
-            </div>
-            <div class="stat-card" style="margin-top:30px;">
-                <h4 style="margin-bottom:15px;">Global Hotspots</h4>
-                <div id="hotspots"></div>
-            </div>
-        </aside>
-    </div>
-
-    <div class="overlay" id="sOverlay" onclick="closeStory()">
-        <div class="viewer-box" onclick="event.stopPropagation()">
-            <div class="p-track"><div class="p-bar" id="pBar"></div></div>
-            <img id="vImg" src="" style="width:100%; height:100%; object-fit:cover;">
-            <div id="vUser" style="position:absolute; bottom:40px; left:30px; color:white; font-size:22px; font-weight:800; text-shadow:0 0 20px rgba(0,0,0,0.5);"></div>
+            <div id="feed"></div>
         </div>
+    </main>
+</div>
+
+<div class="chat-panel" id="chatPanel">
+    <h3 style="margin-bottom:20px;">Messages</h3>
+    <div id="chatHistory" style="height: 80vh; overflow-y: auto;"></div>
+    <div style="display:flex; gap:10px;">
+        <input type="text" id="msgInp" placeholder="Send 'Good Morning'..." style="flex:1; padding:10px; border-radius:10px; background:var(--bg); border:1px solid var(--border); color:white;">
+        <button onclick="sendMsg()" style="background:var(--grad); border:none; padding:10px; border-radius:10px; color:white; cursor:pointer;">➔</button>
     </div>
+</div>
 
-    <div class="overlay" id="setOverlay">
-        <div style="background:var(--surf); padding:40px; border-radius:40px; width:450px; border:1px solid var(--border);">
-            <h2>Neural Profile</h2>
-            <input type="text" id="nn" placeholder="Display Identity" style="width:100%; padding:15px; border-radius:15px; margin:20px 0; background:var(--bg); color:var(--text); border:1px solid var(--border);">
-            <button onclick="saveProfile()" style="width:100%; padding:15px; background:var(--grad); color:white; border:none; border-radius:15px; font-weight:800; cursor:pointer;">Update Nexus</button>
-        </div>
-    </div>
+<div id="toast"></div>
 
-    <div id="toast" style="position:fixed; top:30px; right:30px; background:var(--grad); color:white; padding:15px 30px; border-radius:20px; font-weight:bold; display:none; z-index:10000; box-shadow:0 10px 30px rgba(0,0,0,0.3);"></div>
+<script>
+    const USERS = [
+        {id:0, name:"Anmol", city:"Mumbai, IN", avatar:"https://i.pravatar.cc/150?u=me", live:true},
+        {id:1, name:"Jessica", city:"New York, US", avatar:"https://i.pravatar.cc/150?u=1", live:true},
+        {id:2, name:"Swaraj", city:"Navi Mumbai, IN", avatar:"https://i.pravatar.cc/150?u=2", live:true},
+        {id:3, name:"Rahul", city:"Delhi, IN", avatar:"https://i.pravatar.cc/150?u=3", live:false},
+        {id:4, name:"Elena", city:"Paris, FR", avatar:"https://i.pravatar.cc/150?u=4", live:false},
+        {id:5, name:"Marcus", city:"Berlin, DE", avatar:"https://i.pravatar.cc/150?u=5", live:true}
+    ];
 
-    <script>
-        const USERS = [
-            {id:0, name:"Anmol Rathod", avatar:"https://i.pravatar.cc/150?u=a", story:"https://picsum.photos/seed/a/400/800", live:true},
-            {id:1, name:"Jessica Lane", avatar:"https://i.pravatar.cc/150?u=b", story:"https://picsum.photos/seed/b/400/800", live:false},
-            {id:2, name:"Swaraj Patil", avatar:"https://i.pravatar.cc/150?u=c", story:"https://picsum.photos/seed/c/400/800", live:true},
-            {id:3, name:"Rahul Singh", avatar:"https://i.pravatar.cc/150?u=d", story:"https://picsum.photos/seed/d/400/800", live:false},
-            {id:4, name:"Elena Rossi", avatar:"https://i.pravatar.cc/150?u=e", story:"https://picsum.photos/seed/e/400/800", live:false},
-            {id:5, name:"Marcus Thorne", avatar:"https://i.pravatar.cc/150?u=f", story:"https://picsum.photos/seed/f/400/800", live:true},
-            {id:6, name:"Zoe Kravitz", avatar:"https://i.pravatar.cc/150?u=g", story:"https://picsum.photos/seed/g/400/800", live:false},
-            {id:7, name:"Victor Stone", avatar:"https://i.pravatar.cc/150?u=h", story:"https://picsum.photos/seed/h/400/800", live:true},
-            {id:8, name:"Diana Prince", avatar:"https://i.pravatar.cc/150?u=i", story:"https://picsum.photos/seed/i/400/800", live:false},
-            {id:9, name:"Sumit Gupta", avatar:"https://i.pravatar.cc/150?u=j", story:"https://picsum.photos/seed/j/400/800", live:true}
-        ];
+    let POSTS = [
+        {id:1, uId:2, img:"https://picsum.photos/seed/swaraj/800/800", txt:"Neural Networks are the future of connectivity. 🧠", likes:124, liked:false, comments:[]},
+        {id:2, uId:5, img:"https://picsum.photos/seed/marcus/800/800", txt:"Architecture redefined in the digital age. 🏛️", likes:89, liked:false, comments:[]},
+        {id:3, uId:1, img:"https://picsum.photos/seed/nyc/800/800", txt:"Times Square magic! 🗽", likes:450, liked:false, comments:[]},
+        {id:4, uId:4, img:"https://picsum.photos/seed/paris/800/800", txt:"Parisian mornings... ☕", likes:312, liked:false, comments:[]}
+    ];
 
-        let POSTS = [
-            {id:1, uId:2, img:"https://picsum.photos/seed/p1/800/800", txt:"Neural Networks are the future of connectivity. 🧠", liked:false},
-            {id:2, uId:5, img:"https://picsum.photos/seed/p2/800/800", txt:"Architecture redefined in the digital age. 🏛️", liked:false}
-        ];
+    function render() {
+        document.getElementById('storyRow').innerHTML = USERS.map(u => `
+            <div class="story">
+                <div class="ring"><img src="${u.avatar}">${u.live?'<span class="live-badge">LIVE</span>':''}</div>
+                <small style="font-size:11px;">${u.name}</small>
+            </div>
+        `).join('');
 
-        let sInt;
-
-        function refresh() {
-            const nexus = document.getElementById('storyNexus');
-            nexus.innerHTML = USERS.map(u => `
-                <div class="story-node" onclick="viewStory(${u.id})">
-                    <div class="ring-3d"><img src="${u.avatar}"></div>
-                    ${u.live ? '<span class="live-tag">LIVE</span>' : ''}
-                    <b>${u.name.split(' ')[0]}</b>
-                </div>
-            `).join('');
-
-            const feed = document.getElementById('quantumFeed');
-            feed.innerHTML = POSTS.map(p => `
-                <div class="quantum-post">
-                    <div style="padding:20px; display:flex; align-items:center; gap:12px;">
-                        <img src="${USERS[p.uId].avatar}" style="width:35px; border-radius:10px;">
-                        <b>${USERS[p.uId].name}</b>
+        document.getElementById('feed').innerHTML = POSTS.map(p => {
+            const u = USERS.find(x => x.id === p.uId);
+            return `
+                <div class="post">
+                    <div class="post-header">
+                        <img src="${u.avatar}">
+                        <div class="post-info"><b>${u.name}</b><span>${u.city}</span></div>
                     </div>
-                    <img src="${p.img}" class="post-media" ondblclick="like(${p.id})">
-                    <div class="interaction-panel">
-                        <span onclick="like(${p.id})" style="cursor:pointer;">${p.liked?'❤️':'🤍'}</span>
-                        <span onclick="toast('Neural Link established...')">💬</span>
-                        <span onclick="toast('Data broadcasted!')">✈️</span>
+                    <img src="${p.img}" class="post-img" ondblclick="like(${p.id})">
+                    <div class="post-actions">
+                        <span onclick="like(${p.id})">${p.liked?'❤️':'🤍'}</span>
+                        <span onclick="toggleComments(${p.id})">💬</span>
+                        <span onclick="sharePost('${p.txt}')">✈️</span>
+                        <span style="margin-left:auto" onclick="savePost(${p.id})">📑</span>
                     </div>
-                    <div style="padding:0 25px 25px;"><b>${USERS[p.uId].name}</b> ${p.txt}</div>
+                    <div style="padding:0 15px 10px;"><b>${u.name}</b> ${p.txt}</div>
+                    <div class="comment-box" id="cb-${p.id}">
+                        <div class="comment-list" id="cl-${p.id}">${p.comments.map(c => `<div><b>You:</b> ${c}</div>`).join('')}</div>
+                        <div class="comment-input-area">
+                            <input type="text" id="ci-${p.id}" placeholder="Good or something like that...">
+                            <button onclick="addComment(${p.id})" style="background:none; border:none; color:var(--accent); font-weight:bold; cursor:pointer;">Post</button>
+                        </div>
+                    </div>
                 </div>
-            `).join('');
+            `;
+        }).join('');
+    }
 
-            document.getElementById('hotspots').innerHTML = USERS.slice(0,4).map(u => `
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <small>${u.name}</small>
-                    <small style="color:var(--accent)">Active</small>
-                </div>
-            `).join('');
+    function like(id) {
+        const p = POSTS.find(x => x.id === id);
+        p.liked = !p.liked;
+        showToast(p.liked ? 'Neural Pulse ❤️' : 'Pulse Removed');
+        render();
+    }
+
+    function toggleComments(id) {
+        const box = document.getElementById(`cb-${id}`);
+        box.classList.toggle('active');
+    }
+
+    function addComment(id) {
+        const input = document.getElementById(`ci-${id}`);
+        if(!input.value) return;
+        const p = POSTS.find(x => x.id === id);
+        p.comments.push(input.value);
+        input.value = '';
+        render();
+        showToast('Comment Emitted ⚡');
+    }
+
+    function sharePost(txt) {
+        if (navigator.share) {
+            navigator.share({ title: 'Nexus Social', text: txt, url: window.location.href });
+        } else {
+            window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`);
         }
+    }
 
-        function viewStory(id) {
-            const u = USERS[id];
-            const overlay = document.getElementById('sOverlay');
-            document.getElementById('vImg').src = u.story;
-            document.getElementById('vUser').innerText = u.name;
-            overlay.classList.add('active');
+    function savePost(id) {
+        showToast('Post Saved to Collective 📑');
+    }
 
-            let w = 0;
-            clearInterval(sInt);
-            sInt = setInterval(() => {
-                w += 1;
-                document.getElementById('pBar').style.width = w + '%';
-                if(w >= 100) closeStory();
-            }, 30);
+    function publish() {
+        const val = document.getElementById('postInp').value;
+        if(!val) return;
+        POSTS.unshift({id:Date.now(), uId:0, img:"https://picsum.photos/seed/"+Math.random()+"/800/800", txt:val, liked:false, comments:[]});
+        document.getElementById('postInp').value = '';
+        render();
+        showToast('Quantum Emission Success ⚡');
+    }
+
+    // --- Chat Logic ---
+    const chatHistory = [
+        {name: "Jessica", msg: "Hey Anmol, how are you?"},
+        {name: "Swaraj", msg: "Good Morning! Did you check the new design?"}
+    ];
+
+    function toggleChat() { document.getElementById('chatPanel').classList.toggle('open'); renderChat(); }
+
+    function renderChat() {
+        document.getElementById('chatHistory').innerHTML = chatHistory.map(c => `
+            <div class="chat-bubble ${c.name === 'You' ? 'my-chat' : ''}">
+                <b>${c.name}</b><br>${c.msg}
+            </div>
+        `).join('');
+    }
+
+    function sendMsg() {
+        const inp = document.getElementById('msgInp');
+        if(!inp.value) return;
+        chatHistory.push({name: "You", msg: inp.value});
+        const reply = inp.value;
+        inp.value = '';
+        renderChat();
+        if(reply.toLowerCase().includes('morning')) {
+            setTimeout(() => {
+                chatHistory.push({name: "Jessica", msg: "Good Morning! Have a great day ahead! ✨"});
+                renderChat();
+            }, 1000);
         }
+    }
 
-        function closeStory() { document.getElementById('sOverlay').classList.remove('active'); clearInterval(sInt); }
+    function showToast(m) { const t = document.getElementById('toast'); t.innerHTML = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
 
-        function postDynamic(e) {
-            const inp = document.getElementById('mainInp');
-            let img = "https://picsum.photos/seed/"+Math.random()+"/800/800";
-            if(e && e.target.files[0]) img = URL.createObjectURL(e.target.files[0]);
-            if(!inp.value && !e) return;
-            POSTS.unshift({id:Date.now(), uId:0, img:img, txt:inp.value || "Quantum Broadcast", liked:false});
-            inp.value = ''; refresh(); toast("Broadcast Transmitted ⚡");
-        }
-
-        function like(id) {
-            const p = POSTS.find(x => x.id === id);
-            p.liked = !p.liked;
-            refresh();
-            if(p.liked) toast("Neural Link ❤️");
-        }
-
-        function openExplore() {
-            toast("Synthesizing Explore Feed...");
-            document.getElementById('quantumFeed').innerHTML = `<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
-                ${Array.from({length:21}).map((_,i)=>`<img src="https://picsum.photos/seed/ex${i}/400/400" style="width:100%; border-radius:15px;">`).join('')}
-            </div>`;
-        }
-
-        function toggleTheme() {
-            const b = document.body;
-            b.setAttribute('data-theme', b.getAttribute('data-theme')==='dark'?'light':'dark');
-            toast("Optics Recalibrated");
-        }
-
-        function msgLive() { toast("Jessica: 'Nexus looks amazing!' <br> Swaraj: 'Check the new data pipeline.'"); }
-        function openSettings() { document.getElementById('setOverlay').classList.add('active'); }
-        function saveProfile() { USERS[0].name = document.getElementById('nn').value || "Anmol"; document.getElementById('setOverlay').classList.remove('active'); refresh(); toast("Nexus Identity Updated"); }
-        function toast(m) { const t = document.getElementById('toast'); t.innerHTML = m; t.style.display = 'block'; setTimeout(()=>t.style.display='none',3000); }
-
-        refresh();
-    </script>
+    render();
+</script>
 </body>
 </html>
